@@ -105,19 +105,19 @@ func TestParseErrors(t *testing.T) {
 	}
 }
 
-func newTestHandler() (*Handler, *fakeRecorder, *http.ServeMux) {
+func newTestHandler() (*fakeRecorder, *http.ServeMux) {
 	rec := &fakeRecorder{}
 	h := New(config.Default().GMCMap, rec)
 	h.now = func() time.Time { return time.Unix(1_700_000_000, 0) }
 	mux := http.NewServeMux()
 	h.Register(mux)
-	return h, rec, mux
+	return rec, mux
 }
 
 func TestHandlerAccepts(t *testing.T) {
-	_, rec, mux := newTestHandler()
+	rec, mux := newTestHandler()
 	w := httptest.NewRecorder()
-	mux.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/log2.asp?AID=1&GID=2&CPM=15&ACPM=13.2&uSV=0.075", nil))
+	mux.ServeHTTP(w, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/log2.asp?AID=1&GID=2&CPM=15&ACPM=13.2&uSV=0.075", nil))
 
 	if w.Code != http.StatusOK || w.Body.String() != "OK.ERR0" {
 		t.Errorf("got %d %q, want 200 OK.ERR0", w.Code, w.Body.String())
@@ -143,9 +143,9 @@ func TestHandlerRejects(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, rec, mux := newTestHandler()
+			rec, mux := newTestHandler()
 			w := httptest.NewRecorder()
-			mux.ServeHTTP(w, httptest.NewRequest(tt.method, tt.target, nil))
+			mux.ServeHTTP(w, httptest.NewRequestWithContext(t.Context(), tt.method, tt.target, nil))
 			if w.Code != tt.wantCode {
 				t.Errorf("got %d, want %d", w.Code, tt.wantCode)
 			}
