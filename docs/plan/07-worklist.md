@@ -11,7 +11,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-01 | 0 | Init Go module, repo layout (`cmd/radwatch-exporter`, `internal/ingest`, `internal/metrics`, `internal/config`), `.gitignore`, `.editorconfig` | AD-01, PD-01, PD-02 | DONE (module renamed to `github.com/dickeyf/radwatch-exporter` per PD-01) |
 | IMPL-02 | 0 | Makefile/Taskfile: `build`, `test`, `lint`, `run`, `image`, `helm-lint` | IMPL-01 | DONE (`image` and `helm-lint` wait on IMPL-17 / IMPL-21) |
 | IMPL-03 | 0 | `golangci-lint` config; CI pipeline (lint + test) | IMPL-01, PD-02 | DONE (first green run on GitHub Actions, 2026-10-09) |
-| IMPL-04 | 1 | Config loader: env vars (+ optional file), defaults, validation, fail fast on bad config | IMPL-01 | TODO |
+| IMPL-04 | 1 | Config loader: env vars (+ optional file), defaults, validation, fail fast on bad config | IMPL-01 | DONE (`internal/config`; keys in README and 05-helm-chart) |
 | IMPL-05 | 1 | Ingest handler: GET on configured path, parse `AID`/`GID`/`CPM`/`ACPM`/`uSV`, ignore unknown params, numeric bounds, query length cap | IMPL-04, AD-02 | TODO |
 | IMPL-06 | 1 | Allowlists: GID, AID, source CIDR with trusted-proxy `X-Forwarded-For` handling | IMPL-05, AD-04 | TODO |
 | IMPL-07 | 1 | Metrics registry: gauges, counters per data model in 03-architecture; custom registry + Go/process collectors | IMPL-04, AD-05 | TODO |
@@ -61,7 +61,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | AD-09 | Ingress controller specifics | ingress-nginx / Traefik / other | Controls annotations for no-redirect, IP allowlist, rate limit | TODO |
 | AD-10 | Protect `/metrics`? | None (in-cluster + NetworkPolicy) / basic auth / TLS via `exporter-toolkit` | Probably none + NetworkPolicy | TODO |
 | AD-11 | Stale data handling | Keep last value forever / drop series after N minutes without reports | Prefer explicit `last_report_timestamp` + alert; maybe also expire | TODO |
-| AD-12 | Config source | Env vars only / env + YAML file | Env vars keep the ConfigMap simple | TODO |
+| AD-12 | Config source | Env vars only / env + YAML file | Env vars + optional YAML file, env wins (ADR-006) | DONE (2026-10-09) |
 | AD-13 | Response to rejected requests | Honest 4xx / always 200 (don't leak why) | Depends on Q-05: does the device misbehave on non-200? | TODO |
 
 ---

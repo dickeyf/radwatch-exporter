@@ -32,7 +32,7 @@ Layered options, roughly from cheapest to strongest. Choosing the combination is
 2. **Strict routing.** Only the exact ingest path, GET only; everything else 404 at the Ingress.
 3. **Source-IP allowlist.** Give the counter a DHCP reservation and allow only that IP.
    - At the Ingress (controller annotation), or
-   - In the app (`GMC_ALLOWED_CIDRS`). The app sees the Ingress controller's IP, so it must read `X-Forwarded-For` **only** from trusted proxy CIDRs (`GMC_TRUSTED_PROXIES`). Also requires the Ingress Service to preserve client IPs (e.g. `externalTrafficPolicy: Local`).
+   - In the app (`RADWATCH_ALLOWED_CIDRS`). The app sees the Ingress controller's IP, so it must read `X-Forwarded-For` **only** from trusted proxy CIDRs (`RADWATCH_TRUSTED_PROXIES`). Also requires the Ingress Service to preserve client IPs (e.g. `externalTrafficPolicy: Local`).
 4. **ID allowlist.** Accept only known GID (and AID). Weak on its own (IDs are visible on the wire) but prevents unbounded label creation.
 5. **Path-as-secret.** If Q-04 allows it, use a long random URL path (e.g. `/ingest/9f3c…`) stored in the Secret. Clear-text over HTTP, so only as strong as LAN confidentiality.
 6. **Input validation.** Numeric parse with sane bounds (e.g. CPM 0–1,000,000, µSv/h 0–10,000), reject otherwise; cap query-string length.

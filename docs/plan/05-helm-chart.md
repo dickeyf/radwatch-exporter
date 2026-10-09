@@ -79,19 +79,20 @@ Holds non-secret configuration, consumed as env vars:
 
 | Key | Example | Purpose |
 |-----|---------|---------|
-| `GMC_LISTEN_ADDR` | `:8080` | Ingest listener |
-| `GMC_METRICS_ADDR` | `:9090` | Metrics listener |
-| `GMC_INGEST_PATH` | `/log2.asp` | Path the device calls |
-| `GMC_ALLOWED_GIDS` | `0034021` | Comma-separated allowlist of counter IDs (empty = allow all) |
-| `GMC_ALLOWED_AIDS` | `0230111` | Comma-separated allowlist of user IDs |
-| `GMC_ALLOWED_CIDRS` | `192.168.1.50/32` | Source-IP allowlist (see trusted-proxy note below) |
-| `GMC_TRUSTED_PROXIES` | `10.0.0.0/8` | CIDRs whose `X-Forwarded-For` is trusted |
-| `GMC_DEVICE_NAMES` | `0034021=basement` | Optional friendly-name mapping (AD-05) |
-| `GMC_FORWARD_URL` | `http://www.gmcmap.com/log2.asp` | Optional forwarding (PD-05) |
-| `GMC_LOG_LEVEL` | `info` | Logging |
-| `GMC_RESPONSE_BODY` | `OK.ERR0` | What to reply to the device (Q-05) |
+| `RADWATCH_LISTEN_ADDR` | `:8080` | Ingest listener |
+| `RADWATCH_METRICS_ADDR` | `:9090` | Metrics listener |
+| `RADWATCH_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
+| `RADWATCH_ALLOWED_CIDRS` | `192.168.1.50/32` | Source-IP allowlist (see trusted-proxy note below) |
+| `RADWATCH_TRUSTED_PROXIES` | `10.0.0.0/8` | CIDRs whose `X-Forwarded-For` is trusted |
+| `RADWATCH_DEVICE_NAMES` | `0034021=basement` | Optional friendly-name mapping (AD-05) |
+| `RADWATCH_GMCMAP_PATH` | `/log2.asp` | Path the device calls |
+| `RADWATCH_GMCMAP_ALLOWED_GIDS` | `0034021` | Comma-separated allowlist of counter IDs (empty = allow all) |
+| `RADWATCH_GMCMAP_ALLOWED_AIDS` | `0230111` | Comma-separated allowlist of user IDs |
+| `RADWATCH_GMCMAP_RESPONSE_STATUS` | `200` | HTTP status replied to the device (Q-05) |
+| `RADWATCH_GMCMAP_RESPONSE_BODY` | `OK.ERR0` | Body replied to the device (Q-05) |
+| `RADWATCH_GMCMAP_FORWARD_URL` | `http://www.gmcmap.com/log2.asp` | Optional forwarding (PD-05) |
 
-Final key names are decided in IMPL-04.
+Keys are final (IMPL-04, ADR-006). The chart may also mount a YAML file and set `RADWATCH_CONFIG_FILE`; env vars override it.
 
 ### Secret (optional)
 

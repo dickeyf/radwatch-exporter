@@ -86,6 +86,14 @@ Ingest on `:8080`, metrics on `:9090`, both exposed by the ClusterIP Service. On
 
 The service has two or three routes per listener (ingest path, `/healthz`, `/readyz`; `/metrics`). Go 1.22+ `http.ServeMux` supports method and path patterns, which covers this. chi/gin/echo would add dependencies without adding anything needed. Consequence: handlers are plain `http.Handler`s, testable with `httptest`; middleware (allowlist, logging) is hand-written wrapping.
 
+### ADR-006 — Configuration from env vars plus an optional YAML file
+
+**Status:** Accepted (AD-12, confirmed 2026-10-09).
+
+Order of precedence: built-in defaults, then the YAML file named by `RADWATCH_CONFIG_FILE` (if set), then `RADWATCH_*` env vars. A variable that is set, even to an empty string, overrides the file. Unknown YAML keys are an error. All problems are reported at once and the process exits non-zero before opening any listener.
+
+Settings for one upload protocol live in their own section (`gmcmap:` in YAML, `RADWATCH_GMCMAP_*` in env), so more protocols can be added later without renaming keys. Env vars keep the simple case simple (a ConfigMap via `envFrom`); the file suits per-device maps and longer lists. Reference: the README's Configuration section and `internal/config`.
+
 ## Decisions still open
 
 See the `AD-*` items in [07-worklist.md](07-worklist.md).
