@@ -1,0 +1,84 @@
+# 02 — Roadmap
+
+Each phase ends with something that works on its own. Phase IDs map to work items in [07-worklist.md](07-worklist.md).
+
+## Phase 0 — Decisions and bootstrap
+
+**Goal:** a repo you can build and test, with the blocking decisions made.
+
+- Settle the blocking decisions: AD-01 (language), AD-02 (HTTP stack), AD-03 (port layout), PD-01 (name), PD-02 (repo/registry), PD-03 (licence).
+- `go mod init`, folder layout, Makefile/Taskfile, `.gitignore`, `golangci-lint` config.
+- CI skeleton: lint + test on push.
+
+**Exit:** `go build ./...` and `go test ./...` pass in CI on an empty skeleton.
+
+## Phase 1 — Ingest + metrics (local)
+
+**Goal:** the service runs on a laptop, accepts a counter request, and exposes metrics.
+
+- Ingest handler: parse `AID`, `GID`, `CPM`, `ACPM`, `uSV`; validate; reply 200.
+- Metrics: gauges per device, last-report timestamp, request counters by outcome.
+- `/healthz` and `/readyz`.
+- Config from env vars / file (listen addresses, ingest path, allowlists).
+- Structured JSON logging.
+- Unit tests with recorded example requests; a `curl` smoke test in the README.
+
+**Exit:** `curl "localhost:8080/log2.asp?AID=1&GID=2&CPM=15&ACPM=13.2&uSV=0.075"` makes `gmc_cpm{gid="2"} 15` appear on `/metrics`.
+
+## Phase 2 — Real device on the LAN
+
+**Goal:** prove the actual counter talks to the service, before investing in k8s packaging.
+
+- Run the binary (or container) on a LAN machine on port 80.
+- Point the GMC-500+ Website/URL at it.
+- Capture what the device really sends: headers, query string, method, retry behaviour, what response it expects. Record answers in `06-security-open-questions.md`.
+
+**Exit:** a full hour of readings from the real device in `/metrics`, and the open questions about device behaviour answered or confirmed unanswerable.
+
+## Phase 3 — Container image
+
+**Goal:** a minimal, hardened image.
+
+- Multi-stage Dockerfile, static binary, distroless/scratch, non-root, read-only rootfs compatible.
+- Image scan in CI (e.g. Trivy/Grype).
+- Push to the chosen registry with semver + git SHA tags.
+
+**Exit:** image runs with `--read-only --user 65532 --cap-drop ALL` and passes the Phase 1 smoke test.
+
+## Phase 4 — Helm chart
+
+**Goal:** deploy into the cluster.
+
+- Chart with Deployment, ClusterIP Service (ingest + metrics ports), Ingress, ConfigMap, optional Secret.
+- TLS secret referenced by name only (created elsewhere in the same namespace).
+- Hardened pod security context.
+- `helm lint`, `helm template` checks, and `ct`/kubeconform in CI.
+
+**Exit:** `helm install` in a test namespace; the device's request through the Ingress shows up in metrics.
+
+## Phase 5 — Observability integration
+
+**Goal:** data in Grafana with alerts.
+
+- Scrape config (ServiceMonitor or Alloy, depending on AD-07).
+- Grafana dashboard JSON (CPM, ACPM, µSv/h, time since last report).
+- Alert rules: device silent > N minutes; dose rate above threshold.
+
+**Exit:** dashboard live; silence alert fires when the counter is unplugged.
+
+## Phase 6 — Hardening and extras (optional)
+
+- Forward readings to gmcmap.com / radmon.org (PD-05).
+- Rate limiting per source IP.
+- NetworkPolicy.
+- Log each reading to Loki as a structured event.
+- Release automation (chart + image versioned together).
+
+## Milestone summary
+
+| Milestone | After phase | What you have |
+|-----------|-------------|---------------|
+| M1 | 1 | Working exporter on a laptop |
+| M2 | 2 | Real device confirmed, unknowns answered |
+| M3 | 4 | Running in k8s |
+| M4 | 5 | Dashboard + alerts |

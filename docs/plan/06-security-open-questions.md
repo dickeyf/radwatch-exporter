@@ -1,0 +1,48 @@
+# 06 — Security and open questions
+
+These are **not researched yet**. Answer them in Phase 2 with the real device (packet capture, request logs) or from GQ documentation, then record the answer here and update affected decisions.
+
+## Open questions about the device
+
+| ID | Question | Why it matters | How to answer |
+|----|----------|----------------|---------------|
+| Q-01 | Does the GMC-500+ support HTTPS to the server? Does it validate certificates? | Decides whether TLS on the Ingress helps the device at all, and whether HTTP→HTTPS redirects must be disabled | Try `https://` / port 443; watch Ingress logs |
+| Q-02 | Does it support any authentication (basic auth, token, header)? | Decides whether the Secret is needed | Check device menus/firmware docs; inspect request headers |
+| Q-03 | Can the Website field contain a port (`host:8080`)? | Decides whether port 80 is mandatory | Try it |
+| Q-04 | Can the URL field contain an arbitrary path with subfolders and a query string? How long? | A long random path could act as a shared secret | Try `ingest/abc123...` |
+| Q-05 | What response does it expect? Does it retry or show an error on non-200? | Defines the reply body and status codes; decides whether rejecting looks like a device error | Reply with different codes/bodies, watch the device screen |
+| Q-06 | Exact parameter set and casing sent by this firmware version (extra fields like `DOSE`, temperature, etc.)? | Parser and metric set | Log raw query strings |
+| Q-07 | Reporting interval — fixed at 1 min or configurable? | Scrape interval and "silent device" alert threshold | Observe timestamps |
+| Q-08 | Does it send a `Host` header that matches the Website field? Does it use DNS or only IPs? | Ingress host-based routing needs a correct `Host` header and LAN DNS | Inspect request headers |
+| Q-09 | Static or DHCP IP for the counter? | Source-IP allowlist needs a stable IP (DHCP reservation) | Router config |
+| Q-10 | Does the firmware send the request through any proxy or from a different source than its own IP? | Source-IP allowlist validity | Packet capture |
+
+## Threat model (short)
+
+- The ingest endpoint is reachable from the LAN (and possibly more, depending on how the Ingress is exposed).
+- The device most likely has **no authentication**, and AID/GID are sent in clear text. Anyone who can reach the endpoint can inject fake readings.
+- Impact: misleading graphs, false alerts (or suppressed silence alerts), label-cardinality abuse if arbitrary GIDs create new series.
+- No secrets or user data are at stake; the risk is integrity of the data and resource abuse.
+
+## Restricting what the ingest endpoint accepts
+
+Layered options, roughly from cheapest to strongest. Choosing the combination is AD-04.
+
+1. **Don't expose it to the Internet.** Ingress bound to a LAN-only IP/LoadBalancer. (PD-06)
+2. **Strict routing.** Only the exact ingest path, GET only; everything else 404 at the Ingress.
+3. **Source-IP allowlist.** Give the counter a DHCP reservation and allow only that IP.
+   - At the Ingress (controller annotation), or
+   - In the app (`GMC_ALLOWED_CIDRS`). The app sees the Ingress controller's IP, so it must read `X-Forwarded-For` **only** from trusted proxy CIDRs (`GMC_TRUSTED_PROXIES`). Also requires the Ingress Service to preserve client IPs (e.g. `externalTrafficPolicy: Local`).
+4. **ID allowlist.** Accept only known GID (and AID). Weak on its own (IDs are visible on the wire) but prevents unbounded label creation.
+5. **Path-as-secret.** If Q-04 allows it, use a long random URL path (e.g. `/ingest/9f3c…`) stored in the Secret. Clear-text over HTTP, so only as strong as LAN confidentiality.
+6. **Input validation.** Numeric parse with sane bounds (e.g. CPM 0–1,000,000, µSv/h 0–10,000), reject otherwise; cap query-string length.
+7. **Rate limiting.** Per source IP, e.g. a few requests per minute; at the Ingress or in-app.
+8. **NetworkPolicy.** Only the Ingress controller namespace may reach port `http`; only the scraper may reach port `metrics`.
+
+Suggested default (to confirm in AD-04): 1 + 2 + 3 (at Ingress) + 4 + 6 + 8, with 5 if the device allows it.
+
+## TLS notes
+
+- The chart supports TLS on the Ingress using an **existing** TLS Secret in the release namespace (created by External Secrets, cert-manager, or by hand). The chart only references it by name.
+- If the device is HTTP-only (Q-01), TLS still protects other clients (e.g. you testing with curl), but the device's own traffic stays in clear text. HTTP→HTTPS redirect must be off for the ingest path.
+- `/metrics` stays in-cluster on its own port; TLS/basic-auth on it (via `exporter-toolkit`) is optional and probably unnecessary (AD-10).
