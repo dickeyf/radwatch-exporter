@@ -23,7 +23,7 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 - Structured JSON logging.
 - Unit tests with recorded example requests; a `curl` smoke test in the README.
 
-**Exit:** `curl "localhost:8080/log2.asp?AID=1&GID=2&CPM=15&ACPM=13.2&uSV=0.075"` makes `gmc_cpm{gid="2"} 15` appear on `/metrics`.
+**Exit:** `curl "localhost:8080/log2.asp?AID=1&GID=2&CPM=15&ACPM=13.2&uSV=0.075"` makes `radwatch_cpm{protocol="gmcmap",device_id="2",device="2"} 15` appear on `/metrics`.
 
 ## Phase 2 — Real device on the LAN
 

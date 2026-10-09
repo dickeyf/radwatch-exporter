@@ -23,19 +23,23 @@ Alloy / Prometheus (scrapes "metrics" port in-cluster)
 Mimir → Grafana
 ```
 
-## Data model (initial proposal)
+## Data model
+
+Decided in ADR-007 (AD-05). Every device metric carries the same three labels:
+
+- `protocol`: the upload protocol that delivered the reading (`gmcmap` for now).
+- `device_id`: the counter's ID in that protocol (GMCmap `GID`).
+- `device`: the friendly name from `device_names`, or `device_id` when none is set.
 
 | Metric | Type | Labels | Notes |
 |--------|------|--------|-------|
-| `gmc_cpm` | gauge | `gid` | Last CPM received |
-| `gmc_acpm` | gauge | `gid` | Last averaged CPM |
-| `gmc_dose_rate_usv_per_hour` | gauge | `gid` | Last µSv/h from the device |
-| `gmc_last_report_timestamp_seconds` | gauge | `gid` | Unix time of last accepted reading |
-| `gmc_reports_total` | counter | `gid` | Accepted readings |
-| `gmc_ingest_requests_total` | counter | `result` (`accepted`, `rejected_allowlist`, `bad_request`) | No `gid` on rejects, to avoid cardinality abuse |
+| `radwatch_cpm` | gauge | `protocol`, `device_id`, `device` | Last counts per minute |
+| `radwatch_acpm` | gauge | `protocol`, `device_id`, `device` | Last averaged CPM (only if the device sends it) |
+| `radwatch_dose_rate_microsieverts_per_hour` | gauge | `protocol`, `device_id`, `device` | Last dose rate as computed by the device (only if sent) |
+| `radwatch_last_report_timestamp_seconds` | gauge | `protocol`, `device_id`, `device` | Unix time of the last accepted reading |
+| `radwatch_reports_total` | counter | `protocol`, `device_id`, `device` | Accepted readings |
+| `radwatch_ingest_requests_total` | counter | `protocol`, `result` (`accepted`, `bad_request`, `rejected_allowlist`) | No device labels, so rejected requests can't create series |
 | standard `go_*` / `process_*` | — | — | From client_golang collectors |
-
-Whether `aid` is also a label, and whether any label should be a friendly name instead of the raw ID, is AD-05.
 
 ## Decisions taken
 
@@ -93,6 +97,14 @@ The service has two or three routes per listener (ingest path, `/healthz`, `/rea
 Order of precedence: built-in defaults, then the YAML file named by `RADWATCH_CONFIG_FILE` (if set), then `RADWATCH_*` env vars. A variable that is set, even to an empty string, overrides the file. Unknown YAML keys are an error. All problems are reported at once and the process exits non-zero before opening any listener.
 
 Settings for one upload protocol live in their own section (`gmcmap:` in YAML, `RADWATCH_GMCMAP_*` in env), so more protocols can be added later without renaming keys. Env vars keep the simple case simple (a ConfigMap via `envFrom`); the file suits per-device maps and longer lists. Reference: the README's Configuration section and `internal/config`.
+
+### ADR-007 — Metric names and labels
+
+**Status:** Accepted (AD-05, confirmed 2026-10-09).
+
+Prefix `radwatch_`. Device labels are `protocol`, `device_id` and `device` (see Data model). `protocol` keeps IDs from different upload protocols apart. `device` lets dashboards show friendly names without a Grafana lookup; it falls back to the ID so the label is never empty. The GMCmap account ID (`AID`) is not a label: it identifies the gmcmap.com account, not the counter, and adds nothing to the series. Device series can only be created by a reading that passed validation and the allowlists, which bounds cardinality.
+
+Units: the dose rate stays in µSv/h (`_microsieverts_per_hour`) rather than the Prometheus base unit, because that is the unit the device reports and people read; converting to Sv would give values around 1e-7. The unit is spelled out in the name, so there is no ambiguity.
 
 ## Decisions still open
 
