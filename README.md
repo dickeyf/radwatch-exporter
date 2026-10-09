@@ -12,3 +12,7 @@ make test
 make lint    # requires golangci-lint v2
 make run
 ```
+
+## Licence
+
+Apache License 2.0. See [LICENSE](LICENSE).

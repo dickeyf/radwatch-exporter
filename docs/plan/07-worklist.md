@@ -72,7 +72,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 |----|----------|-----------------|--------|
 | PD-01 | Project / binary / chart name | `gmc-exporter`, `gmc-ingest`, `geiger-exporter`… | DONE (2026-10-09: `radwatch-exporter` for repo, module, binary, image and chart. Not `gmc…`: GMC is GQ's model prefix and also a GM brand, and other protocols than GMCmap may be added later) |
 | PD-02 | Repo host, CI and container registry | GitHub + GHCR / self-hosted Gitea + registry / other | DONE (2026-10-09: GitHub `dickeyf/radwatch-exporter`, public; GitHub Actions; images to GHCR `ghcr.io/dickeyf/…`) |
-| PD-03 | Public or private; licence | Private / public with MIT, Apache-2.0, AGPL… | TODO |
+| PD-03 | Public or private; licence | Private / public with MIT, Apache-2.0, AGPL… | DONE (2026-10-09: public, Apache-2.0; `LICENSE` at repo root) |
 | PD-04 | Target architectures | amd64 only / amd64 + arm64 (depends on cluster nodes) | TODO |
 | PD-05 | Keep reporting to the public map? | Forward to gmcmap.com / radmon.org / stop public reporting | TODO |
 | PD-06 | Exposure and hostname | LAN-only Ingress IP / also reachable from outside; hostname and LAN DNS entry | TODO |
