@@ -35,7 +35,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-25 | 4 | ConfigMap from values, consumed via `envFrom` | IMPL-21, IMPL-04 | DONE (`config.*` → `RADWATCH_*`) |
 | IMPL-26 | 6 | Optional Secret (`create` / `existingSecret`), wired via `secretKeyRef` | IMPL-21, AD-04 | TODO (deferred from Phase 4, 2026-10-09: nothing to store until Q-04 or forwarding needs a secret) |
 | IMPL-27 | 4 | `values.schema.json`; `NOTES.txt` printing device Website/URL | IMPL-21 | DONE (`values.schema.json` (string maps, enums, patterns); NOTES prints Website/URL) |
-| IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | DOING |
+| IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | DONE (CI `chart` job: `helm lint --strict` + schema, kubeconform, kube-linter) |
 | IMPL-29 | 4 | Deploy to cluster; point device at the cluster; confirm metrics | IMPL-22..25 | DONE (2026-10-10: Flux, chart 0.2.0, ingest Service on a fixed private IP; uploads accepted with the counter\'s own address; Prometheus target up) |
 | IMPL-30 | 5 | Scrape config (ServiceMonitor template or Alloy snippet) | AD-07 | DONE (optional `servicemonitor.yaml`, `serviceMonitor.*` values) |
 | IMPL-31 | 5 | Grafana dashboard JSON | IMPL-30 | TODO |
