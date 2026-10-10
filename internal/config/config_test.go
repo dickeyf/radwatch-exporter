@@ -41,6 +41,7 @@ func TestLoadEnv(t *testing.T) {
 		"RADWATCH_LISTEN_ADDR":            "0.0.0.0:80",
 		"RADWATCH_LOG_LEVEL":              "debug",
 		"RADWATCH_STALE_AFTER":            "90s",
+		"RADWATCH_DEBUG_REQUESTS":         "true",
 		"RADWATCH_ALLOWED_CIDRS":          "192.168.1.50, 10.1.2.3/8",
 		"RADWATCH_TRUSTED_PROXIES":        "",
 		"RADWATCH_DEVICE_NAMES":           "0034021=basement",
@@ -57,6 +58,7 @@ func TestLoadEnv(t *testing.T) {
 	want.ListenAddr = "0.0.0.0:80"
 	want.LogLevel = "debug"
 	want.StaleAfter = 90 * time.Second
+	want.DebugRequests = true
 	want.AllowedCIDRs = Prefixes{netip.MustParsePrefix("192.168.1.50/32"), netip.MustParsePrefix("10.0.0.0/8")}
 	want.TrustedProxies = nil
 	want.DeviceNames = map[string]string{"0034021": "basement"}
@@ -129,6 +131,7 @@ func TestLoadErrors(t *testing.T) {
 		{"same ports", map[string]string{"RADWATCH_METRICS_ADDR": ":8080"}, "", "must differ"},
 		{"bad stale_after", map[string]string{"RADWATCH_STALE_AFTER": "5"}, "", "RADWATCH_STALE_AFTER"},
 		{"negative stale_after", map[string]string{"RADWATCH_STALE_AFTER": "-1m"}, "", "stale_after"},
+		{"bad debug flag", map[string]string{"RADWATCH_DEBUG_REQUESTS": "maybe"}, "", "RADWATCH_DEBUG_REQUESTS"},
 		{"bad log level", map[string]string{"RADWATCH_LOG_LEVEL": "loud"}, "", "log_level"},
 		{"bad cidr", map[string]string{"RADWATCH_ALLOWED_CIDRS": "1.2.3.4/40"}, "", "RADWATCH_ALLOWED_CIDRS"},
 		{"bad device names", map[string]string{"RADWATCH_DEVICE_NAMES": "0034021"}, "", "id=name"},

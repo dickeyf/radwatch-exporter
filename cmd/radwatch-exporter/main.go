@@ -57,7 +57,13 @@ func run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("GET /metrics", m.Handler())
 
-	servers := []*http.Server{newServer(cfg.ListenAddr, ingestMux), newServer(cfg.MetricsAddr, metricsMux)}
+	var ingestHandler http.Handler = ingestMux
+	if cfg.DebugRequests {
+		ingestHandler = ingest.DebugRequests(logger, ingestMux)
+		logger.Warn("debug_requests is on: every ingest request is logged with its raw query and headers")
+	}
+
+	servers := []*http.Server{newServer(cfg.ListenAddr, ingestHandler), newServer(cfg.MetricsAddr, metricsMux)}
 	// Bind every listener before serving, so readiness means all ports are up.
 	listeners := make([]net.Listener, 0, len(servers))
 	for _, srv := range servers {

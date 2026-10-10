@@ -31,6 +31,7 @@ type Config struct {
 	MetricsAddr    string            `yaml:"metrics_addr"`
 	LogLevel       string            `yaml:"log_level"`
 	StaleAfter     time.Duration     `yaml:"stale_after"`
+	DebugRequests  bool              `yaml:"debug_requests"`
 	AllowedCIDRs   Prefixes          `yaml:"allowed_cidrs"`
 	TrustedProxies Prefixes          `yaml:"trusted_proxies"`
 	DeviceNames    map[string]string `yaml:"device_names"`
@@ -125,6 +126,14 @@ func applyEnv(lookup func(string) (string, bool), cfg *Config) error {
 			errs = append(errs, fmt.Errorf("RADWATCH_STALE_AFTER: %w", err))
 		} else {
 			cfg.StaleAfter = d
+		}
+	}
+	if v, ok := lookup("RADWATCH_DEBUG_REQUESTS"); ok {
+		b, err := strconv.ParseBool(strings.TrimSpace(v))
+		if err != nil {
+			errs = append(errs, fmt.Errorf("RADWATCH_DEBUG_REQUESTS: %w", err))
+		} else {
+			cfg.DebugRequests = b
 		}
 	}
 	prefixes("RADWATCH_ALLOWED_CIDRS", &cfg.AllowedCIDRs)

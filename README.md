@@ -4,6 +4,65 @@ Receives readings pushed by radiation counters (first protocol: GQ GMCmap upload
 
 See [docs/plan](docs/plan/README.md) for the project plan and worklist.
 
+## Run locally
+
+```sh
+make build
+./bin/radwatch-exporter          # ingest on :8080, metrics on :9090
+```
+
+The process logs JSON to stdout. Ctrl-C (or SIGTERM) shuts it down gracefully.
+
+### Smoke test
+
+In another terminal, send a reading the way a GMC counter does, then look at the metrics:
+
+```sh
+curl "localhost:8080/log2.asp?AID=1&GID=2&CPM=15&ACPM=13.2&uSV=0.075"
+# OK.ERR0
+curl -s localhost:9090/metrics | grep '^radwatch_'
+# radwatch_cpm{device="2",device_id="2",protocol="gmcmap"} 15
+# radwatch_acpm{device="2",device_id="2",protocol="gmcmap"} 13.2
+# radwatch_dose_rate_sieverts_per_hour{device="2",device_id="2",protocol="gmcmap"} 7.5e-08
+# ...
+```
+
+The dose rate is stored in Sv/h (Prometheus base units); show it as µSv/h in Grafana.
+
+### Endpoints
+
+| Port | Path | Purpose |
+|------|------|---------|
+| 8080 | `GET /log2.asp` (`gmcmap.path`) | GMCmap uploads from the counter |
+| 8080 | `GET /healthz` | Liveness: the process is up |
+| 8080 | `GET /readyz` | Readiness: both listeners are up and not shutting down |
+| 9090 | `GET /metrics` | Prometheus metrics; never route this port through the Ingress |
+
+Rejected uploads get `400`/`414` (bad input) or `403` (allowlists), and are counted in `radwatch_ingest_requests_total{result=...}`.
+
+## Point a GQ counter at it (GMC-500+, GMCmap protocol)
+
+On the counter, under **Menu → Server**:
+
+| Setting | Value |
+|---------|-------|
+| Website | IP or host name of the machine running the exporter |
+| URL | `log2.asp` (or your `gmcmap.path` without the leading `/`) |
+| User ID (AID) | anything; becomes `account_id` in the logs |
+| Counter ID (GID) | the ID that will appear as `device_id` |
+
+The counter calls port 80, so either run the exporter with `RADWATCH_LISTEN_ADDR=:80` (needs privileges on Linux) or forward port 80 to 8080. Whether the Website field accepts a port is open question Q-03 in [docs/plan/06](docs/plan/06-security-open-questions.md).
+
+To lock it down once it works, set `RADWATCH_ALLOWED_CIDRS` to the counter's IP (give it a DHCP reservation) and `RADWATCH_GMCMAP_ALLOWED_GIDS` to its counter ID. Behind a reverse proxy or Ingress, also set `RADWATCH_TRUSTED_PROXIES` to the proxy's addresses so the real client IP is read from `X-Forwarded-For`.
+
+### Capturing what the device really sends
+
+Set `RADWATCH_DEBUG_REQUESTS=true`. Every request on the ingest port, on any path, is then logged as a `debug request` line with the method, raw request URI, Host, all headers (credentials redacted), source address and reply status. Health probes are skipped. Use it to answer the open questions about device behaviour, then turn it off.
+
+```sh
+RADWATCH_DEBUG_REQUESTS=true RADWATCH_LISTEN_ADDR=:80 ./bin/radwatch-exporter
+```
+
 ## Development
 
 ```sh
@@ -23,6 +82,7 @@ Defaults, then an optional YAML file (`RADWATCH_CONFIG_FILE`), then env vars; a 
 | `RADWATCH_METRICS_ADDR` | `metrics_addr` | `:9090` |
 | `RADWATCH_LOG_LEVEL` | `log_level` | `info` |
 | `RADWATCH_STALE_AFTER` | `stale_after` | `5m` (`0` = keep values forever) |
+| `RADWATCH_DEBUG_REQUESTS` | `debug_requests` | `false` (log every raw ingest request) |
 | `RADWATCH_ALLOWED_CIDRS` | `allowed_cidrs` | empty (allow all) |
 | `RADWATCH_TRUSTED_PROXIES` | `trusted_proxies` | empty |
 | `RADWATCH_DEVICE_NAMES` | `device_names` | empty |

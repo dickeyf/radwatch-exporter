@@ -21,8 +21,8 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-11 | 1 | Structured JSON logging (`log/slog`), one line per accepted/rejected reading | IMPL-05 | DONE (`reading accepted` INFO / `reading rejected` WARN, from the gmcmap handler) |
 | IMPL-12 | 1 | Graceful shutdown on SIGTERM; HTTP server timeouts (read/header/write/idle) | IMPL-05 | DONE (`main.go`; SIGTERM path not exercised on Windows yet) |
 | IMPL-13 | 1 | Unit tests: parser, allowlists, metrics values; table-driven with real example query strings | IMPL-05..07 | TODO |
-| IMPL-14 | 1 | README: run locally, curl smoke test, device configuration | IMPL-05 | TODO |
-| IMPL-15 | 2 | Debug mode logging raw query + headers to capture real device behaviour | IMPL-11 | TODO |
+| IMPL-14 | 1 | README: run locally, curl smoke test, device configuration | IMPL-05 | DONE (commands verified against a local run) |
+| IMPL-15 | 2 | Debug mode logging raw query + headers to capture real device behaviour | IMPL-11 | DONE (`RADWATCH_DEBUG_REQUESTS`, `internal/ingest/debug.go`) |
 | IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | TODO |
 | IMPL-17 | 3 | Multi-stage Dockerfile: static build, distroless/scratch, UID 65532, no shell | IMPL-05, AD-08 | TODO |
 | IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | TODO |
