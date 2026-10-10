@@ -24,7 +24,7 @@ Get radiation readings from a GQ GMC-500+ Geiger counter into the home LGTM stac
 
 - Parameter names are case-sensitive in existing open-source receivers; radwatch matches them in any case (IMPL-05). Some firmware may send extra fields; the receiver must ignore unknown parameters.
 
-Everything else about the device's network behaviour (TLS, ports, auth, retries, response expectations) is **unknown** and tracked in [06-security-open-questions.md](06-security-open-questions.md).
+Everything else about the device's network behaviour (TLS, ports, auth, retries, response expectations) was unknown before Phase 2; the answers and the remaining open questions are in [06-security-open-questions.md](06-security-open-questions.md).
 
 ## Scope
 

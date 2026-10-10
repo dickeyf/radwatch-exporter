@@ -49,7 +49,8 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 
 **Goal:** deploy into the cluster.
 
-- Chart with Deployment, ClusterIP Service (ingest + metrics ports), Ingress, ConfigMap, optional Secret.
+- Chart with Deployment, ClusterIP Service (ingest + metrics ports), Ingress, ConfigMap, optional ServiceMonitor.
+- Chart published to GHCR as an OCI artifact on release tags (IMPL-36).
 - TLS secret referenced by name only (created elsewhere in the same namespace).
 - Hardened pod security context.
 - `helm lint`, `helm template` checks, and `ct`/kubeconform in CI.
@@ -61,7 +62,7 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 **Goal:** data in Grafana with alerts.
 
 - Scrape config (ServiceMonitor or Alloy, depending on AD-07).
-- Grafana dashboard JSON (CPM, ACPM, µSv/h, time since last report).
+- Grafana dashboard JSON (CPM, µSv/h, time since last report; ACPM only as a long-term reference).
 - Alert rules: device silent > N minutes; dose rate above threshold.
 
 **Exit:** dashboard live; silence alert fires when the counter is unplugged.
@@ -71,7 +72,8 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 - Forward readings to gmcmap.com / radmon.org (PD-05).
 - Rate limiting per source IP.
 - NetworkPolicy.
-- Release automation (chart + image versioned together).
+- Chart release automation beyond IMPL-36 (chart versioned separately, `appVersion` = image, PD-08).
+- Optional Secret (IMPL-26).
 
 ## Milestone summary
 

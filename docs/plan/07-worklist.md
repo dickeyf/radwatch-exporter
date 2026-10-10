@@ -36,13 +36,14 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-26 | 6 | Optional Secret (`create` / `existingSecret`), wired via `secretKeyRef` | IMPL-21, AD-04 | TODO (deferred from Phase 4, 2026-10-09: nothing to store until Q-04 or forwarding needs a secret) |
 | IMPL-27 | 4 | `values.schema.json`; `NOTES.txt` printing device Website/URL | IMPL-21 | DONE (`values.schema.json` (string maps, enums, patterns); NOTES prints Website/URL) |
 | IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | DOING |
-| IMPL-29 | 4 | Deploy to cluster; point device at Ingress; confirm metrics | IMPL-22..26 | TODO |
+| IMPL-29 | 4 | Deploy to cluster; point device at Ingress; confirm metrics | IMPL-22..25 | TODO |
 | IMPL-30 | 5 | Scrape config (ServiceMonitor template or Alloy snippet) | AD-07 | DONE (optional `servicemonitor.yaml`, `serviceMonitor.*` values) |
 | IMPL-31 | 5 | Grafana dashboard JSON | IMPL-30 | TODO |
 | IMPL-32 | 5 | Alert rules: device silent, dose-rate threshold | IMPL-30, PD-07 | TODO |
 | IMPL-33 | 6 | Optional NetworkPolicy template | IMPL-23 | TODO |
 | IMPL-34 | 6 | Optional forwarding to gmcmap.com/radmon.org (async, timeout, failures don't affect ingest) | PD-05 | TODO |
 | IMPL-35 | 6 | Optional in-app rate limiting | AD-04 | TODO |
+| IMPL-36 | 4 | Publish the chart to GHCR as an OCI artifact (`oci://ghcr.io/dickeyf/charts/radwatch-exporter`) on `v*` tags; chart `version` and `appVersion` checked against the tag | IMPL-28, PD-08 | TODO |
 
 ---
 

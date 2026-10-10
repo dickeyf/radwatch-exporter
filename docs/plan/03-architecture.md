@@ -15,7 +15,7 @@ Service radwatch-exporter (ClusterIP)
    ▼
 Pod: radwatch-exporter (single static Go binary)
    ├─ ingest: source-IP check → validate → GID/AID check → update gauges (ADR-009)
-   ├─ (optional) forwarder → gmcmap.com / radmon.org
+   ├─ (optional, not implemented yet: IMPL-34) forwarder → gmcmap.com / radmon.org
    └─ Prometheus registry → /metrics
    ▲
 Alloy / Prometheus (scrapes "metrics" port in-cluster)

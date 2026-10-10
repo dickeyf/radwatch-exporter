@@ -71,7 +71,7 @@ Layered options, roughly from cheapest to strongest. Choosing the combination is
 7. **Rate limiting.** Per source IP, e.g. a few requests per minute; at the Ingress or in-app.
 8. **NetworkPolicy.** Only the Ingress controller namespace may reach port `http`; only the scraper may reach port `metrics`.
 
-Decided in ADR-009 (AD-04): 3 (in the app, with trusted-proxy handling) + 4 + 6 are implemented; 1, 2 and 8 come with the chart (Phase 4); 5 waits for Q-04; 7 is IMPL-35.
+Decided in ADR-009 (AD-04): 3 (in the app, with trusted-proxy handling) + 4 + 6 are implemented; 1 and 2 come with the chart (Phase 4); 8 is IMPL-33 (Phase 6); 5 waits for Q-04; 7 is IMPL-35.
 
 ## TLS notes
 

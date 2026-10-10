@@ -33,7 +33,7 @@ Values map to the config with `config.*` (e.g. `config.gmcmap.allowedGIDs`), ren
 - Config: `envFrom` the ConfigMap; secret values via `env.valueFrom.secretKeyRef` only if the Secret is enabled.
 - Probes: `livenessProbe` and `readinessProbe` on `http:/healthz` and `http:/readyz`.
 - `podAnnotations` and `podLabels`: free-form maps passed through to the pod template.
-- Resources: small requests/limits (e.g. 10m CPU / 16Mi request, 64Mi limit) — tune after Phase 2.
+- Resources: small requests/limits (e.g. 10m CPU / 16Mi request, 64Mi limit) — tune after the first deploy (IMPL-29).
 - Pod and container security context as in [04-container.md](04-container.md).
 - `automountServiceAccountToken: false`.
 - Annotation `checksum/config` from the ConfigMap so config changes roll the pod.
@@ -61,7 +61,7 @@ The Ingress uses `http`; the in-cluster scraper uses `metrics`.
 ### Ingress
 
 - `ingressClassName` configurable (no default assumed).
-- Host configurable (e.g. `gmc.home.lan`) — it must be resolvable by the counter on the LAN (PD-06).
+- Host configurable (e.g. `radwatch.example.com`) — it must be resolvable by the counter on the LAN (PD-06).
 - Routes **only** the ingest path (configurable, default `/log2.asp`) to Service port `http`. `/metrics` is never routed.
 - **TLS from an existing Secret** (PD-10: cert-manager creates it). The chart does not create or manage certificates. It takes the name of a `kubernetes.io/tls` Secret that already exists in the same namespace (e.g. created by External Secrets Operator or cert-manager):
 
@@ -69,7 +69,7 @@ The Ingress uses `http`; the in-cluster scraper uses `metrics`.
   ingress:
     enabled: true
     className: ""
-    host: gmc.home.lan
+    host: radwatch.example.com
     path: /log2.asp
     pathType: Exact
     annotations: {}           # free-form, passed through as-is
@@ -114,6 +114,8 @@ Holds non-secret configuration, consumed as env vars:
 Keys are final (IMPL-04, ADR-006). The chart may also mount a YAML file and set `RADWATCH_CONFIG_FILE`; env vars override it.
 
 ### Secret (optional)
+
+Not implemented yet (IMPL-26, deferred to Phase 6).
 
 - Rendered only if `secret.create: true`; or reference an existing one with `secret.existingSecret`.
 - The GMC-500+ is not known to support credentials (Q-02). AID/GID are sent in clear text and are not secrets.
