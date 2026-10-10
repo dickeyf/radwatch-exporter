@@ -26,7 +26,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | DOING (device uploads accepted on :80; Q-02/03/06/08/10 answered, Q-07 partly; Q-07 = 2 min; still need an hour of readings, Q-05 and Q-11) |
 | IMPL-17 | 3 | Multi-stage Dockerfile: static build, distroless/scratch, UID 65532, no shell | IMPL-05, AD-08 | DONE (`Dockerfile`, distroless nonroot, digest-pinned, cross-compiling) |
 | IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | DONE (allowlist `.dockerignore`; `--build-arg VERSION` → `main.version`) |
-| IMPL-19 | 3 | CI: build (multi-arch if needed), scan image, push with semver + SHA tags | IMPL-17, PD-02, PD-04 | DOING |
+| IMPL-19 | 3 | CI: build (multi-arch if needed), scan image, push with semver + SHA tags | IMPL-17, PD-02, PD-04 | DONE (CI `publish` job; first push `edge` + `sha-329e196`, amd64 + arm64, public on GHCR) |
 | IMPL-20 | 3 | Verify image runs with `--read-only --cap-drop ALL --user 65532` | IMPL-17 | DONE (CI `image` job: read-only, UID 65532, no caps, smoke test, size < 20 MiB) |
 | IMPL-21 | 4 | Helm chart scaffold, `_helpers.tpl`, labels (incl. free-form `commonLabels`), `values.yaml` | IMPL-17 | TODO |
 | IMPL-22 | 4 | Deployment: ports, probes, resources, hardened securityContext, `automountServiceAccountToken: false`, config checksum annotation, free-form `podAnnotations` / `podLabels` | IMPL-21 | TODO |
