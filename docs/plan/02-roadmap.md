@@ -71,7 +71,6 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 - Forward readings to gmcmap.com / radmon.org (PD-05).
 - Rate limiting per source IP.
 - NetworkPolicy.
-- Log each reading to Loki as a structured event.
 - Release automation (chart + image versioned together).
 
 ## Milestone summary

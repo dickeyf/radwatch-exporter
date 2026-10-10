@@ -8,19 +8,19 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 
 | ID | Phase | Item | Depends on | Status |
 |----|-------|------|------------|--------|
-| IMPL-01 | 0 | Init Go module, repo layout (`cmd/radwatch-exporter`, `internal/ingest`, `internal/metrics`, `internal/config`), `.gitignore`, `.editorconfig` | AD-01, PD-01, PD-02 | DONE (module renamed to `github.com/dickeyf/radwatch-exporter` per PD-01) |
+| IMPL-01 | 0 | Init Go module, repo layout (`cmd/radwatch-exporter`, `internal/ingest`, `internal/metrics`, `internal/config`), `.gitignore`, `.editorconfig` | AD-01, PD-01, PD-02 | DONE (module `github.com/dickeyf/radwatch-exporter` per PD-01; later packages: `internal/health`, `internal/ingest/gmcmap`) |
 | IMPL-02 | 0 | Makefile/Taskfile: `build`, `test`, `lint`, `run`, `image`, `helm-lint` | IMPL-01 | DONE (`image` and `helm-lint` wait on IMPL-17 / IMPL-21) |
 | IMPL-03 | 0 | `golangci-lint` config; CI pipeline (lint + test) | IMPL-01, PD-02 | DONE (first green run on GitHub Actions, 2026-10-09) |
 | IMPL-04 | 1 | Config loader: env vars (+ optional file), defaults, validation, fail fast on bad config | IMPL-01 | DONE (`internal/config`; keys in README and 05-helm-chart) |
-| IMPL-05 | 1 | Ingest handler: GET on configured path, parse `AID`/`GID`/`CPM`/`ACPM`/`uSV`, ignore unknown params, numeric bounds, query length cap | IMPL-04, AD-02 | DONE (`internal/ingest/gmcmap`; not yet served by `main`, wired with IMPL-07/08/12) |
+| IMPL-05 | 1 | Ingest handler: GET on configured path, parse `AID`/`GID`/`CPM`/`ACPM`/`uSV`, ignore unknown params, numeric bounds, query length cap | IMPL-04, AD-02 | DONE (`internal/ingest/gmcmap`) |
 | IMPL-06 | 1 | Allowlists: GID, AID, source CIDR with trusted-proxy `X-Forwarded-For` handling | IMPL-05, AD-04 | DONE (`internal/ingest/source.go` + gmcmap ID checks, ADR-009) |
 | IMPL-07 | 1 | Metrics registry: gauges, counters per data model in 03-architecture; custom registry + Go/process collectors | IMPL-04, AD-05 | DONE (`internal/metrics`, incl. stale expiry per ADR-008) |
 | IMPL-08 | 1 | Separate metrics HTTP server on `:9090` serving `/metrics` | IMPL-07, AD-03 | DONE (Phase 1 curl exit check passes locally) |
 | IMPL-09 | 1 | `/healthz` (process up) and `/readyz` (listeners up) | IMPL-05 | DONE (`internal/health`, on the ingest port; ready once both listeners are bound, not ready during shutdown) |
-| IMPL-10 | 1 | Configurable response body/status to the device | IMPL-05 | TODO |
+| IMPL-10 | 1 | Configurable response body/status to the device | IMPL-05 | DONE (`gmcmap.response_status` / `gmcmap.response_body`, done with IMPL-05) |
 | IMPL-11 | 1 | Structured JSON logging (`log/slog`), one line per accepted/rejected reading | IMPL-05 | DONE (`reading accepted` INFO / `reading rejected` WARN, from the gmcmap handler) |
 | IMPL-12 | 1 | Graceful shutdown on SIGTERM; HTTP server timeouts (read/header/write/idle) | IMPL-05 | DONE (`main.go`; SIGTERM path not exercised on Windows yet) |
-| IMPL-13 | 1 | Unit tests: parser, allowlists, metrics values; table-driven with real example query strings | IMPL-05..07 | TODO |
+| IMPL-13 | 1 | Unit tests: parser, allowlists, metrics values; table-driven with real example query strings | IMPL-05..07 | DONE (table-driven tests in each package, incl. real GMC query strings and X-Forwarded-For cases) |
 | IMPL-14 | 1 | README: run locally, curl smoke test, device configuration | IMPL-05 | DONE (commands verified against a local run) |
 | IMPL-15 | 2 | Debug mode logging raw query + headers to capture real device behaviour | IMPL-11 | DONE (`RADWATCH_DEBUG_REQUESTS`, `internal/ingest/debug.go`) |
 | IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | TODO |
@@ -81,4 +81,4 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | PD-09 | Go version policy | Pin latest stable; update via Renovate/Dependabot | TODO |
 | PD-10 | Namespace and how the TLS secret is provisioned | External Secrets / cert-manager / manual; secret name convention | TODO |
 | PD-11 | Testing level | Unit only / + integration test with `httptest` / + kind cluster e2e in CI | TODO |
-| PD-12 | Support more than one counter? | Single device / multiple (affects labels and allowlist UX) | TODO |
+| PD-12 | Support more than one counter? | Single device / multiple (affects labels and allowlist UX) | DONE (2026-10-09: multiple devices supported by design: per-device labels (ADR-007), ID lists and per-device stale expiry (ADR-008/009)) |

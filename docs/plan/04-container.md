@@ -13,7 +13,7 @@
 ```dockerfile
 # syntax=docker/dockerfile:1
 
-ARG GO_VERSION=1.xx   # pin in AD/PD decision; keep in sync with go.mod
+ARG GO_VERSION=1.26   # keep in sync with go.mod (PD-09)
 
 FROM golang:${GO_VERSION} AS build
 WORKDIR /src

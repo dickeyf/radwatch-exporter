@@ -22,7 +22,7 @@ Get radiation readings from a GQ GMC-500+ Geiger counter into the home LGTM stac
   | `ACPM` | Averaged CPM |
   | `uSV` | Dose rate in µSv/h, computed by the device from its calibration (not energy-compensated) |
 
-- Parameter names are case-sensitive in existing open-source receivers. Some firmware may send extra fields; the receiver must ignore unknown parameters.
+- Parameter names are case-sensitive in existing open-source receivers; radwatch matches them in any case (IMPL-05). Some firmware may send extra fields; the receiver must ignore unknown parameters.
 
 Everything else about the device's network behaviour (TLS, ports, auth, retries, response expectations) is **unknown** and tracked in [06-security-open-questions.md](06-security-open-questions.md).
 
@@ -41,7 +41,6 @@ Everything else about the device's network behaviour (TLS, ports, auth, retries,
 
 - Forwarding each reading to gmcmap.com (or radmon.org) so the public map keeps working.
 - Grafana dashboard and alert rules shipped with the chart or alongside it.
-- Structured logs of each reading for Loki.
 
 **Out of scope**
 

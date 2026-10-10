@@ -67,7 +67,7 @@ RADWATCH_DEBUG_REQUESTS=true RADWATCH_LISTEN_ADDR=:80 ./bin/radwatch-exporter
 
 ```sh
 make build   # bin/radwatch-exporter
-make test
+make test    # uses -race, which needs cgo (CGO_ENABLED=1 and a C compiler); on Windows without one: go test ./...
 make lint    # requires golangci-lint v2
 make run
 ```
@@ -91,7 +91,7 @@ Defaults, then an optional YAML file (`RADWATCH_CONFIG_FILE`), then env vars; a 
 | `RADWATCH_GMCMAP_ALLOWED_AIDS` | `gmcmap.allowed_aids` | empty (allow all) |
 | `RADWATCH_GMCMAP_RESPONSE_STATUS` | `gmcmap.response_status` | `200` |
 | `RADWATCH_GMCMAP_RESPONSE_BODY` | `gmcmap.response_body` | `OK.ERR0` |
-| `RADWATCH_GMCMAP_FORWARD_URL` | `gmcmap.forward_url` | empty (off) |
+| `RADWATCH_GMCMAP_FORWARD_URL` | `gmcmap.forward_url` | empty (off). Not implemented yet (IMPL-34): validated, then ignored |
 
 Lists are comma-separated in env vars (`a,b`) and YAML sequences in the file. CIDR lists accept bare IPs. Device names are `id=name,id=name` in env vars and a map in YAML:
 

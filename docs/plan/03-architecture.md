@@ -14,7 +14,7 @@ Service radwatch-exporter (ClusterIP)
    └─ port "metrics" → container :9090  (/metrics)
    ▼
 Pod: radwatch-exporter (single static Go binary)
-   ├─ ingest handler → validate → allowlist check → update gauges
+   ├─ ingest: source-IP check → validate → GID/AID check → update gauges (ADR-009)
    ├─ (optional) forwarder → gmcmap.com / radmon.org
    └─ Prometheus registry → /metrics
    ▲
