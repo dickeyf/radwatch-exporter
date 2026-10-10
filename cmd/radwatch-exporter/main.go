@@ -34,8 +34,9 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level}))
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-	if err := run(ctx, cfg, logger); err != nil {
+	err = run(ctx, cfg, logger)
+	stop()
+	if err != nil {
 		logger.Error("exiting", "error", err)
 		os.Exit(1)
 	}
