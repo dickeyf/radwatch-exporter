@@ -20,7 +20,7 @@ Partly answered in Phase 2 (see **Answers** below). Answer the rest with the rea
 
 ## Answers (Phase 2, GMC-500+ on the LAN, 2026-10-09)
 
-Captured with `RADWATCH_DEBUG_REQUESTS=true`. Example request as received:
+Captured with `RADWATCH_DEBUG_REQUESTS=true`. Example request as received (addresses and IDs replaced with placeholders):
 
 ```
 GET /log2.asp?AID=0230111&GID=0034021&CPM=8&ACPM=14.89&uSV=0.05 HTTP/1.1
@@ -39,7 +39,7 @@ Connection: close
 | Q-06 | Exactly `AID`, `GID`, `CPM`, `ACPM`, `uSV`, in that casing, no extra fields. `uSV` has two decimals (steps of 0.01 µSv/h). `ACPM` stayed at 14.89 across the first readings while `CPM` moved: keep watching |
 | Q-07 | Every 2 minutes, as configured on the device |
 | Q-08 | `Host` is exactly the Website value (an IP in the test). Only other headers: `Accept: */*`, `Connection: close`. No `User-Agent`. HTTP/1.1, one connection per upload |
-| Q-09 | Counter at `192.168.1.50` on the IoT VLAN; give it a DHCP reservation before using the source-IP allowlist |
+| Q-09 | DHCP, on a separate IoT VLAN; give it a reservation before using the source-IP allowlist |
 | Q-10 | No proxy or NAT: requests arrive from the counter's own address across VLANs, so a source-IP allowlist works |
 | Q-11 | Open. Up to 271 µSv/h the device sent plain µSv/h (`uSV=255.14`, `uSV=270.88`, with ~42–45k CPM). Expected to stay µSv/h because the parameter has no unit and gmcmap.com reads it as µSv/h. Fallback if it switches: warn when CPM and dose rate disagree by orders of magnitude (this unit runs at ~150–170 CPM per µSv/h) |
 
