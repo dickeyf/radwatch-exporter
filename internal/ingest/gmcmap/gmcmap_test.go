@@ -3,6 +3,7 @@ package gmcmap
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"math"
 	"net/http"
@@ -194,6 +195,41 @@ func TestHandlerRejects(t *testing.T) {
 			}
 			if got := rec.counts["gmcmap/bad_request"] == 1; got != tt.wantCounted {
 				t.Errorf("bad_request counted = %v, want %v", got, tt.wantCounted)
+			}
+		})
+	}
+}
+
+func TestHandlerIDAllowlists(t *testing.T) {
+	cfg := config.Default().GMCMap
+	cfg.AllowedGIDs = []string{"0034021"}
+	cfg.AllowedAIDs = []string{"0230111"}
+	tests := []struct {
+		name, query string
+		wantCode    int
+		wantResult  string
+	}{
+		{"allowed", "AID=0230111&GID=0034021&CPM=15", http.StatusOK, "accepted"},
+		{"other GID", "AID=0230111&GID=9999999&CPM=15", http.StatusForbidden, "rejected_allowlist"},
+		{"other AID", "AID=1&GID=0034021&CPM=15", http.StatusForbidden, "rejected_allowlist"},
+		{"missing AID", "GID=0034021&CPM=15", http.StatusForbidden, "rejected_allowlist"},
+		{"bad input checked first", "AID=0230111&GID=9999999", http.StatusBadRequest, "bad_request"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := &fakeRecorder{}
+			mux := http.NewServeMux()
+			New(cfg, rec, slog.New(slog.NewJSONHandler(io.Discard, nil))).Register(mux)
+			w := httptest.NewRecorder()
+			mux.ServeHTTP(w, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/log2.asp?"+tt.query, nil))
+			if w.Code != tt.wantCode {
+				t.Errorf("got %d, want %d", w.Code, tt.wantCode)
+			}
+			if rec.counts["gmcmap/"+tt.wantResult] != 1 {
+				t.Errorf("counts: %v, want %s", rec.counts, tt.wantResult)
+			}
+			if wantReadings := tt.wantCode == http.StatusOK; (len(rec.readings) == 1) != wantReadings {
+				t.Errorf("readings: %+v", rec.readings)
 			}
 		})
 	}

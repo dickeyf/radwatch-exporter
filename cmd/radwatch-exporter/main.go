@@ -15,6 +15,7 @@ import (
 
 	"github.com/dickeyf/radwatch-exporter/internal/config"
 	"github.com/dickeyf/radwatch-exporter/internal/health"
+	"github.com/dickeyf/radwatch-exporter/internal/ingest"
 	"github.com/dickeyf/radwatch-exporter/internal/ingest/gmcmap"
 	"github.com/dickeyf/radwatch-exporter/internal/metrics"
 )
@@ -51,7 +52,8 @@ func run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	var checker health.Checker
 	ingestMux := http.NewServeMux()
 	checker.Register(ingestMux)
-	gmcmap.New(cfg.GMCMap, m, logger).Register(ingestMux)
+	guard := ingest.SourceGuard{Allowed: cfg.AllowedCIDRs, Trusted: cfg.TrustedProxies}
+	gmcmap.New(cfg.GMCMap, m, logger).Register(ingestMux, guard.Middleware(gmcmap.Protocol, m, logger))
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("GET /metrics", m.Handler())
 

@@ -32,31 +32,58 @@ var idPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,32}$`)
 
 // Handler serves the GMCmap upload endpoint.
 type Handler struct {
-	cfg config.GMCMap
-	rec ingest.Recorder
-	log *slog.Logger
-	now func() time.Time
+	cfg         config.GMCMap
+	rec         ingest.Recorder
+	log         *slog.Logger
+	now         func() time.Time
+	allowedGIDs map[string]bool // empty allows every GID
+	allowedAIDs map[string]bool // empty allows every AID
 }
 
 // New returns a handler that reports outcomes to rec and logs one line per
 // request to log.
 func New(cfg config.GMCMap, rec ingest.Recorder, log *slog.Logger) *Handler {
-	return &Handler{cfg: cfg, rec: rec, log: log, now: time.Now}
+	return &Handler{
+		cfg: cfg, rec: rec, log: log, now: time.Now,
+		allowedGIDs: set(cfg.AllowedGIDs),
+		allowedAIDs: set(cfg.AllowedAIDs),
+	}
 }
 
-// Register adds the handler to mux for GET (and so HEAD) on the configured path.
-func (h *Handler) Register(mux *http.ServeMux) {
-	mux.Handle("GET "+h.cfg.Path, h)
+func set(items []string) map[string]bool {
+	m := make(map[string]bool, len(items))
+	for _, s := range items {
+		m[s] = true
+	}
+	return m
+}
+
+// Register adds the handler to mux for GET (and so HEAD) on the configured
+// path, wrapped in the given middleware (outermost first).
+func (h *Handler) Register(mux *http.ServeMux, middleware ...func(http.Handler) http.Handler) {
+	var handler http.Handler = h
+	for i := len(middleware) - 1; i >= 0; i-- {
+		handler = middleware[i](handler)
+	}
+	mux.Handle("GET "+h.cfg.Path, handler)
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.RawQuery) > MaxQueryLen {
-		h.reject(w, r, http.StatusRequestURITooLong, "query too long")
+		h.reject(w, r, ingest.ResultBadRequest, http.StatusRequestURITooLong, "query too long")
 		return
 	}
 	reading, err := Parse(r.URL.RawQuery)
 	if err != nil {
-		h.reject(w, r, http.StatusBadRequest, err.Error())
+		h.reject(w, r, ingest.ResultBadRequest, http.StatusBadRequest, err.Error())
+		return
+	}
+	if len(h.allowedGIDs) > 0 && !h.allowedGIDs[reading.DeviceID] {
+		h.reject(w, r, ingest.ResultRejectedAllowlist, http.StatusForbidden, "GID not allowed")
+		return
+	}
+	if len(h.allowedAIDs) > 0 && !h.allowedAIDs[reading.AccountID] {
+		h.reject(w, r, ingest.ResultRejectedAllowlist, http.StatusForbidden, "AID not allowed")
 		return
 	}
 	reading.Time = h.now()
@@ -69,15 +96,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(h.cfg.ResponseBody))
 }
 
-// reject answers a request that failed validation. Replying with an honest
-// 4xx is a placeholder until AD-13 decides what the device should see.
-func (h *Handler) reject(w http.ResponseWriter, r *http.Request, status int, msg string) {
-	h.rec.Count(Protocol, ingest.ResultBadRequest)
+// reject answers a refused request with an honest 4xx (ADR-009).
+func (h *Handler) reject(w http.ResponseWriter, r *http.Request, result string, status int, msg string) {
+	h.rec.Count(Protocol, result)
 	h.log.LogAttrs(r.Context(), slog.LevelWarn, "reading rejected",
 		slog.String("protocol", Protocol),
-		slog.String("result", ingest.ResultBadRequest),
+		slog.String("result", result),
 		slog.Int("status", status),
 		slog.String("reason", msg),
+		slog.String("client_ip", ingest.ClientIP(r.Context())),
 		slog.String("remote_addr", r.RemoteAddr),
 	)
 	http.Error(w, msg, status)
@@ -97,7 +124,10 @@ func (h *Handler) logAccepted(r *http.Request, reading ingest.Reading) {
 	if reading.SvPerH != nil {
 		attrs = append(attrs, slog.Float64("dose_rate_sieverts_per_hour", *reading.SvPerH))
 	}
-	attrs = append(attrs, slog.String("remote_addr", r.RemoteAddr))
+	attrs = append(attrs,
+		slog.String("client_ip", ingest.ClientIP(r.Context())),
+		slog.String("remote_addr", r.RemoteAddr),
+	)
 	h.log.LogAttrs(r.Context(), slog.LevelInfo, "reading accepted", attrs...)
 }
 

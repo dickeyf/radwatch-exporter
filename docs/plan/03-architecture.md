@@ -114,6 +114,20 @@ Units: Prometheus base units, no SI prefixes. The device reports µSv/h; the exp
 
 When a device has not reported for `stale_after` (`RADWATCH_STALE_AFTER`, default `5m`, `0` disables), the exporter drops its value gauges (`radwatch_cpm`, `radwatch_acpm`, `radwatch_dose_rate_sieverts_per_hour`) at the next scrape. `radwatch_last_report_timestamp_seconds` and `radwatch_reports_total` are kept. Dashboards then show a gap instead of a flat, stale line, and the "device silent" alert stays a simple `time() - radwatch_last_report_timestamp_seconds > 300` with no `absent()`. The next accepted reading brings the gauges back. Alternatives rejected: keeping the last value forever (misleading graphs), dropping every series (alerting needs `absent()` per device).
 
+### ADR-009 — Layered ingest restrictions, honest 4xx on rejection
+
+**Status:** Accepted (AD-04 and AD-13, confirmed 2026-10-09).
+
+In-app checks, in order, each skipped when its list is empty:
+
+1. **Source IP** against `allowed_cidrs` (`internal/ingest.SourceGuard`, shared by all protocols). The client address is the TCP peer, unless the peer is in `trusted_proxies`: then `X-Forwarded-For` is read right to left and the first hop outside `trusted_proxies` is the client. An entry added by the client itself (leftmost) is therefore never trusted. An unparseable hop rejects the request when the allowlist is set.
+2. **Input validation** (400 / 414), so junk never reaches the ID checks.
+3. **GID** against `gmcmap.allowed_gids`, then **AID** against `gmcmap.allowed_aids` (a missing AID fails a non-empty AID list).
+
+Rejections answer honestly: 403 for allowlists, 400/414 for bad input. They are counted as `rejected_allowlist` or `bad_request` and logged at WARN with `client_ip` and `reason`. The resolved `client_ip` is logged for accepted readings too.
+
+Outside the app, the Ingress (strict path, LAN-only exposure, optional controller IP allowlist) and a NetworkPolicy add the outer layers listed in 06. Path-as-secret waits for Q-04. AD-13 is revisited if Phase 2 shows the device misbehaves on non-200 replies (Q-05); the reply would then become configurable.
+
 ## Decisions still open
 
 See the `AD-*` items in [07-worklist.md](07-worklist.md).

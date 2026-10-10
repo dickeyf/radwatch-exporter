@@ -13,7 +13,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-03 | 0 | `golangci-lint` config; CI pipeline (lint + test) | IMPL-01, PD-02 | DONE (first green run on GitHub Actions, 2026-10-09) |
 | IMPL-04 | 1 | Config loader: env vars (+ optional file), defaults, validation, fail fast on bad config | IMPL-01 | DONE (`internal/config`; keys in README and 05-helm-chart) |
 | IMPL-05 | 1 | Ingest handler: GET on configured path, parse `AID`/`GID`/`CPM`/`ACPM`/`uSV`, ignore unknown params, numeric bounds, query length cap | IMPL-04, AD-02 | DONE (`internal/ingest/gmcmap`; not yet served by `main`, wired with IMPL-07/08/12) |
-| IMPL-06 | 1 | Allowlists: GID, AID, source CIDR with trusted-proxy `X-Forwarded-For` handling | IMPL-05, AD-04 | TODO |
+| IMPL-06 | 1 | Allowlists: GID, AID, source CIDR with trusted-proxy `X-Forwarded-For` handling | IMPL-05, AD-04 | DONE (`internal/ingest/source.go` + gmcmap ID checks, ADR-009) |
 | IMPL-07 | 1 | Metrics registry: gauges, counters per data model in 03-architecture; custom registry + Go/process collectors | IMPL-04, AD-05 | DONE (`internal/metrics`, incl. stale expiry per ADR-008) |
 | IMPL-08 | 1 | Separate metrics HTTP server on `:9090` serving `/metrics` | IMPL-07, AD-03 | DONE (Phase 1 curl exit check passes locally) |
 | IMPL-09 | 1 | `/healthz` (process up) and `/readyz` (listeners up) | IMPL-05 | DONE (`internal/health`, on the ingest port; ready once both listeners are bound, not ready during shutdown) |
@@ -53,7 +53,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | AD-01 | Implementation language | Go / Rust | Go (ADR-001): official Prometheus client, stdlib HTTP server | DONE (2026-10-09) |
 | AD-02 | HTTP stack | stdlib `net/http` (Go 1.22+ routing) / chi / gin / echo | stdlib `net/http` (ADR-005) — two or three routes, no framework needed | DONE (2026-10-09) |
 | AD-03 | Port layout | Separate ports (8080 ingest, 9090 metrics) / single port with path routing | Separate: 8080 ingest, 9090 metrics (ADR-004) | DONE (2026-10-09) |
-| AD-04 | How to restrict the ingest endpoint | See layered list in 06 | Depends on Q-01..Q-04, Q-09 | TODO |
+| AD-04 | How to restrict the ingest endpoint | See layered list in 06 | Source IP (trusted-proxy XFF) → GID → AID in app; Ingress/NetworkPolicy outer layers; path-as-secret waits on Q-04 (ADR-009) | DONE (2026-10-09) |
 | AD-05 | Metric names, units and labels | `gid` only / `gid`+`aid` / friendly `device` name | `radwatch_*` with `protocol`, `device_id`, `device` labels; no `aid`; dose rate in Sv/h, base units (ADR-007) | DONE (2026-10-09) |
 | AD-06 | Replicas and rollout strategy | 1 replica Recreate / 1 replica RollingUpdate | Stateless; >1 replica breaks scrape consistency | TODO |
 | AD-07 | How metrics are scraped | ServiceMonitor (Prometheus Operator CRD) / Alloy discovery / pod annotations | Depends on how the LGTM stack scrapes today | TODO |
@@ -62,7 +62,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | AD-10 | Protect `/metrics`? | None (in-cluster + NetworkPolicy) / basic auth / TLS via `exporter-toolkit` | Probably none + NetworkPolicy | TODO |
 | AD-11 | Stale data handling | Keep last value forever / drop series after N minutes without reports | Hybrid: value gauges expire after `stale_after` (default 5m), timestamp and counter kept (ADR-008) | DONE (2026-10-09) |
 | AD-12 | Config source | Env vars only / env + YAML file | Env vars + optional YAML file, env wins (ADR-006) | DONE (2026-10-09) |
-| AD-13 | Response to rejected requests | Honest 4xx / always 200 (don't leak why) | Depends on Q-05: does the device misbehave on non-200? Stubbed as honest 400/414 in IMPL-05 | TODO |
+| AD-13 | Response to rejected requests | Honest 4xx / always 200 (don't leak why) | Depends on Q-05: does the device misbehave on non-200? Honest 403 / 400 / 414 (ADR-009); revisit if Q-05 shows the device needs 200 | DONE (2026-10-09) |
 
 ---
 
