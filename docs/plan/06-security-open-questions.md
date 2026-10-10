@@ -37,11 +37,13 @@ Connection: close
 | Q-04 | Not tested yet |
 | Q-05 | Pending: watch the device screen after an upload with the default `200 OK.ERR0` reply |
 | Q-06 | Exactly `AID`, `GID`, `CPM`, `ACPM`, `uSV`, in that casing, no extra fields. `uSV` has two decimals (steps of 0.01 µSv/h). `ACPM` stayed at 14.89 across the first readings while `CPM` moved: keep watching |
-| Q-07 | Every 2 minutes, as configured on the device |
+| Q-07 | Every 2 minutes, as configured on the device. Over one hour: 30 uploads, no gaps, intervals between 1:56 and 2:08 |
 | Q-08 | `Host` is exactly the Website value (an IP in the test). Only other headers: `Accept: */*`, `Connection: close`. No `User-Agent`. HTTP/1.1, one connection per upload |
 | Q-09 | DHCP, on a separate IoT VLAN; give it a reservation before using the source-IP allowlist |
 | Q-10 | No proxy or NAT: requests arrive from the counter's own address across VLANs, so a source-IP allowlist works |
 | Q-11 | Open. Up to 271 µSv/h the device sent plain µSv/h (`uSV=255.14`, `uSV=270.88`, with ~42–45k CPM). Expected to stay µSv/h because the parameter has no unit and gmcmap.com reads it as µSv/h. Fallback if it switches: warn when CPM and dose rate disagree by orders of magnitude (this unit runs at ~150–170 CPM per µSv/h) |
+
+**One-hour run.** 30 consecutive uploads, all accepted (`200 OK.ERR0`). A test source (natural uranium ore) next to the counter for ~14 minutes gave a steady ~45,000 CPM / ~270 µSv/h (about 167 CPM per µSv/h, vs ~150 at background); CPM fell back to background in the first upload after removing it, so `CPM` is a per-minute value with no long smoothing. `ACPM` only moved during the exposure (+1.0 in total, ~0.15 per upload) and was otherwise constant at two decimals, so it is a very long-term average (likely since power-on or longer), not a recent one: graph `CPM`, not `ACPM`, for current levels.
 
 **WiFi.** The counter would not join the main home network (2.4/5/6 GHz, single name) but joined the IoT network. Its WiFi stack is 2.4 GHz-only and old; WPA3/transition mode, required PMF, 802.11r, band steering and WiFi 6/6E beacon extras commonly break such devices. Use a 2.4 GHz WPA2-only network with PMF optional or off, no fast roaming and no band steering.
 
