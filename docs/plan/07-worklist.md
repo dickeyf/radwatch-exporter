@@ -9,7 +9,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | ID | Phase | Item | Depends on | Status |
 |----|-------|------|------------|--------|
 | IMPL-01 | 0 | Init Go module, repo layout (`cmd/radwatch-exporter`, `internal/ingest`, `internal/metrics`, `internal/config`), `.gitignore`, `.editorconfig` | AD-01, PD-01, PD-02 | DONE (module `github.com/dickeyf/radwatch-exporter` per PD-01; later packages: `internal/health`, `internal/ingest/gmcmap`) |
-| IMPL-02 | 0 | Makefile/Taskfile: `build`, `test`, `lint`, `run`, `image`, `helm-lint` | IMPL-01 | DONE (`image` and `helm-lint` wait on IMPL-17 / IMPL-21) |
+| IMPL-02 | 0 | Makefile/Taskfile: `build`, `test`, `lint`, `run`, `image`, `helm-lint` | IMPL-01 | DONE (all targets usable since IMPL-17 / IMPL-21) |
 | IMPL-03 | 0 | `golangci-lint` config; CI pipeline (lint + test) | IMPL-01, PD-02 | DONE (first green run on GitHub Actions, 2026-10-09) |
 | IMPL-04 | 1 | Config loader: env vars (+ optional file), defaults, validation, fail fast on bad config | IMPL-01 | DONE (`internal/config`; keys in README and 05-helm-chart) |
 | IMPL-05 | 1 | Ingest handler: GET on configured path, parse `AID`/`GID`/`CPM`/`ACPM`/`uSV`, ignore unknown params, numeric bounds, query length cap | IMPL-04, AD-02 | DONE (`internal/ingest/gmcmap`) |
@@ -28,13 +28,13 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | DONE (allowlist `.dockerignore`; `--build-arg VERSION` → `main.version`) |
 | IMPL-19 | 3 | CI: build (multi-arch if needed), scan image, push with semver + SHA tags | IMPL-17, PD-02, PD-04 | DONE (CI `publish` job; first push `edge` + `sha-329e196`, amd64 + arm64, public on GHCR) |
 | IMPL-20 | 3 | Verify image runs with `--read-only --cap-drop ALL --user 65532` | IMPL-17 | DONE (CI `image` job: read-only, UID 65532, no caps, smoke test, size < 20 MiB) |
-| IMPL-21 | 4 | Helm chart scaffold, `_helpers.tpl`, labels (incl. free-form `commonLabels`), `values.yaml` | IMPL-17 | TODO |
-| IMPL-22 | 4 | Deployment: ports, probes, resources, hardened securityContext, `automountServiceAccountToken: false`, config checksum annotation, free-form `podAnnotations` / `podLabels` | IMPL-21 | TODO |
-| IMPL-23 | 4 | ClusterIP Service exposing `http` and `metrics` ports; free-form `service.annotations` / `service.labels` | IMPL-21 | TODO |
-| IMPL-24 | 4 | Ingress: class, host, ingest path only, annotations passthrough, TLS via existing secret name, HTTP must keep working | IMPL-23, AD-09 | TODO |
-| IMPL-25 | 4 | ConfigMap from values, consumed via `envFrom` | IMPL-21, IMPL-04 | TODO |
+| IMPL-21 | 4 | Helm chart scaffold, `_helpers.tpl`, labels (incl. free-form `commonLabels`), `values.yaml` | IMPL-17 | DONE (`deploy/helm/radwatch-exporter`, `commonLabels`) |
+| IMPL-22 | 4 | Deployment: ports, probes, resources, hardened securityContext, `automountServiceAccountToken: false`, config checksum annotation, free-form `podAnnotations` / `podLabels` | IMPL-21 | DONE (Recreate, probes, hardened contexts, checksum, pod metadata maps) |
+| IMPL-23 | 4 | ClusterIP Service exposing `http` and `metrics` ports; free-form `service.annotations` / `service.labels` | IMPL-21 | DONE (`service.annotations` / `service.labels`) |
+| IMPL-24 | 4 | Ingress: class, host, ingest path only, annotations passthrough, TLS via existing secret name, HTTP must keep working | IMPL-23, AD-09 | DONE (host required, ingest path only, optional TLS secret, free-form annotations) |
+| IMPL-25 | 4 | ConfigMap from values, consumed via `envFrom` | IMPL-21, IMPL-04 | DONE (`config.*` → `RADWATCH_*`) |
 | IMPL-26 | 4 | Optional Secret (`create` / `existingSecret`), wired via `secretKeyRef` | IMPL-21, AD-04 | TODO |
-| IMPL-27 | 4 | `values.schema.json`; `NOTES.txt` printing device Website/URL | IMPL-21 | TODO |
+| IMPL-27 | 4 | `values.schema.json`; `NOTES.txt` printing device Website/URL | IMPL-21 | DONE (`values.schema.json` (string maps, enums, patterns); NOTES prints Website/URL) |
 | IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | TODO |
 | IMPL-29 | 4 | Deploy to cluster; point device at Ingress; confirm metrics | IMPL-22..26 | TODO |
 | IMPL-30 | 5 | Scrape config (ServiceMonitor template or Alloy snippet) | AD-07 | TODO |
@@ -55,10 +55,10 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | AD-03 | Port layout | Separate ports (8080 ingest, 9090 metrics) / single port with path routing | Separate: 8080 ingest, 9090 metrics (ADR-004) | DONE (2026-10-09) |
 | AD-04 | How to restrict the ingest endpoint | See layered list in 06 | Source IP (trusted-proxy XFF) → GID → AID in app; Ingress/NetworkPolicy outer layers; path-as-secret waits on Q-04 (ADR-009) | DONE (2026-10-09) |
 | AD-05 | Metric names, units and labels | `gid` only / `gid`+`aid` / friendly `device` name | `radwatch_*` with `protocol`, `device_id`, `device` labels; no `aid`; dose rate in Sv/h, base units (ADR-007) | DONE (2026-10-09) |
-| AD-06 | Replicas and rollout strategy | 1 replica Recreate / 1 replica RollingUpdate | Stateless; >1 replica breaks scrape consistency | TODO |
+| AD-06 | Replicas and rollout strategy | 1 replica Recreate / 1 replica RollingUpdate | 1 replica, `Recreate` (ADR-003) | DONE (2026-10-09) |
 | AD-07 | How metrics are scraped | ServiceMonitor (Prometheus Operator CRD) / Alloy discovery / pod annotations | Depends on how the LGTM stack scrapes today | TODO |
 | AD-08 | Base image | `distroless/static:nonroot` / `scratch` / Chainguard static | `gcr.io/distroless/static-debian12:nonroot`, digest-pinned (ADR-010) | DONE (2026-10-09) |
-| AD-09 | Ingress controller specifics | ingress-nginx / Traefik / other | Controls annotations for no-redirect, IP allowlist, rate limit | TODO |
+| AD-09 | Ingress controller specifics | ingress-nginx / Traefik / other | Controls annotations for no-redirect, IP allowlist, rate limit | DONE (2026-10-09: Traefik; chart stays generic (`className` + free-form annotations); route the `web` entrypoint without HTTPS redirect, see 05) |
 | AD-10 | Protect `/metrics`? | None (in-cluster + NetworkPolicy) / basic auth / TLS via `exporter-toolkit` | Probably none + NetworkPolicy | TODO |
 | AD-11 | Stale data handling | Keep last value forever / drop series after N minutes without reports | Hybrid: value gauges expire after `stale_after` (default 5m), timestamp and counter kept (ADR-008) | DONE (2026-10-09) |
 | AD-12 | Config source | Env vars only / env + YAML file | Env vars + optional YAML file, env wins (ADR-006) | DONE (2026-10-09) |
@@ -79,6 +79,6 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | PD-07 | Alert thresholds and routing | Silence threshold (5–10 min: the device uploads about every 2 min, Q-07), dose-rate threshold, where alerts go | TODO |
 | PD-08 | Versioning and release process | SemVer; chart version vs app version; tag-driven releases | DONE (2026-10-09: releases from `vX.Y.Z` git tags; image tags `X.Y.Z`, `X.Y`, `sha-<short>`, `edge` from `main`, no `latest`; chart has its own SemVer with `appVersion` = image version) |
 | PD-09 | Go version policy | Pin latest stable; update via Renovate/Dependabot | TODO |
-| PD-10 | Namespace and how the TLS secret is provisioned | External Secrets / cert-manager / manual; secret name convention | TODO |
+| PD-10 | Namespace and how the TLS secret is provisioned | External Secrets / cert-manager / manual; secret name convention | DONE (2026-10-09: cert-manager creates the TLS secret; the chart only references `ingress.tls.secretName`; TLS off by default since the device is HTTP-only. Namespace: the release namespace, chosen at install) |
 | PD-11 | Testing level | Unit only / + integration test with `httptest` / + kind cluster e2e in CI | TODO |
 | PD-12 | Support more than one counter? | Single device / multiple (affects labels and allowlist UX) | DONE (2026-10-09: multiple devices supported by design: per-device labels (ADR-007), ID lists and per-device stale expiry (ADR-008/009)) |

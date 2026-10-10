@@ -1,0 +1,99 @@
+# Default values for radwatch-exporter. See docs/plan/05-helm-chart.md.
+
+image:
+  repository: ghcr.io/dickeyf/radwatch-exporter
+  # Defaults to the chart's appVersion. Use a release (0.1.0) or a sha-<short> tag; there is no "latest".
+  tag: ""
+  # Optional digest (sha256:...); takes precedence over the tag when set.
+  digest: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Added to every rendered resource.
+commonLabels: {}
+
+# Exporter configuration, rendered into a ConfigMap of RADWATCH_* env vars.
+# Keys and defaults: README "Configuration". Empty lists mean "allow all".
+config:
+  logLevel: info
+  staleAfter: 5m
+  # Logs every raw ingest request with headers. Device debugging only.
+  debugRequests: false
+  # Source-IP allowlist, e.g. ["192.168.1.50"].
+  allowedCIDRs: []
+  # Addresses of the ingress controller pods, so X-Forwarded-For is trusted from them.
+  trustedProxies: []
+  # Friendly names: { "0034021": "office" }.
+  deviceNames: {}
+  gmcmap:
+    path: /log2.asp
+    allowedGIDs: []
+    allowedAIDs: []
+    responseStatus: 200
+    responseBody: OK.ERR0
+    # Not implemented yet (IMPL-34): validated, then ignored.
+    forwardURL: ""
+
+# Extra env vars for the container, as a list of EnvVar objects.
+extraEnv: []
+
+podAnnotations: {}
+podLabels: {}
+
+service:
+  type: ClusterIP
+  # Service port for ingest; the Ingress targets it. The container listens on 8080.
+  port: 80
+  metricsPort: 9090
+  annotations: {}
+  labels: {}
+
+ingress:
+  enabled: false
+  # e.g. traefik
+  className: ""
+  # The device sends its Website setting as Host, so use the hostname configured on it.
+  host: ""
+  # Defaults to config.gmcmap.path.
+  path: ""
+  pathType: Exact
+  # Free-form, passed through as-is (external-dns, Traefik router settings...).
+  annotations: {}
+  tls:
+    # The device only speaks HTTP on port 80; keep HTTP routed even when TLS is on.
+    enabled: false
+    # Existing kubernetes.io/tls secret in the release namespace (e.g. from cert-manager).
+    secretName: ""
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    memory: 64Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  seccompProfile:
+    type: RuntimeDefault
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

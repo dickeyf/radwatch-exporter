@@ -76,9 +76,9 @@ The counter pushes to us; we keep the last value in memory and let Prometheus/Al
 
 ### ADR-003 — Stateless, single replica
 
-**Status:** Proposed (confirm as AD-06).
+**Status:** Accepted (AD-06, confirmed 2026-10-09).
 
-No persistence; on restart the gauges are empty until the next report (≤ 1 min). One replica: with more, a scrape hits only one pod and values would flip between "stale" and "fresh". Use `strategy: Recreate` or `RollingUpdate` with `maxSurge: 1`; a gap of one reading on deploy is acceptable.
+No persistence; on restart the gauges are empty until the next report (≤ 2 min, Q-07). One replica: with more, uploads and scrapes would land on different pods and values would flip between "stale" and "fresh". `strategy: Recreate`, so two pods never receive uploads at once; a gap of one reading on deploy is acceptable. The chart hard-codes both.
 
 ### ADR-004 — Separate ports for ingest and metrics
 

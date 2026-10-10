@@ -72,6 +72,33 @@ make lint    # requires golangci-lint v2
 make run
 ```
 
+## Kubernetes (Helm)
+
+The chart is in [deploy/helm/radwatch-exporter](deploy/helm/radwatch-exporter); every value is documented in its `values.yaml`. Example for a private hostname behind Traefik, published by external-dns as a Cloudflare DNS-only record:
+
+```yaml
+# my-values.yaml
+config:
+  allowedCIDRs: ["192.168.1.50"]       # the counter (DHCP reservation)
+  trustedProxies: ["10.0.0.0/8"]       # Traefik's pod CIDR
+  deviceNames: {"0034021": office}
+  gmcmap:
+    allowedGIDs: ["0034021"]
+ingress:
+  enabled: true
+  className: traefik
+  host: radwatch.example.com           # also the Website setting on the counter
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+```
+
+```sh
+helm install radwatch deploy/helm/radwatch-exporter -n radwatch --create-namespace -f my-values.yaml
+```
+
+The counter only speaks plain HTTP on port 80, so the host must be served on Traefik's `web` entrypoint without an HTTPS redirect. Set `externalTrafficPolicy: Local` on Traefik's LoadBalancer Service so the counter's IP survives for `allowedCIDRs`. `/metrics` stays in the cluster on Service port 9090.
+
 ## Configuration
 
 Defaults, then an optional YAML file (`RADWATCH_CONFIG_FILE`), then env vars; a set env var always wins. Invalid config stops the process at startup.

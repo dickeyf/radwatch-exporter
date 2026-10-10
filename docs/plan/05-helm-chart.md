@@ -6,24 +6,27 @@
 deploy/helm/radwatch-exporter/
 ├── Chart.yaml
 ├── values.yaml
-├── values.schema.json        # optional but recommended
+├── values.schema.json        # types every value; annotation/label maps are string-to-string
 ├── templates/
 │   ├── _helpers.tpl
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── ingress.yaml
 │   ├── configmap.yaml
-│   ├── secret.yaml           # rendered only if enabled
-│   ├── servicemonitor.yaml   # optional, see AD-07
-│   └── NOTES.txt
-└── README.md
+│   ├── secret.yaml           # not yet (IMPL-26)
+│   ├── servicemonitor.yaml   # not yet (AD-07, IMPL-30)
+│   └── NOTES.txt             # prints the Website / URL to enter on the counter
 ```
+
+Implemented in IMPL-21–25 and 27; `values.yaml` documents every value. The chart's `appVersion` is the image tag used when `image.tag` is empty, so a `v<appVersion>` release must exist on GHCR (or set `image.tag` to an `edge`/`sha-` tag).
+
+Values map to the config with `config.*` (e.g. `config.gmcmap.allowedGIDs`), rendered as `RADWATCH_*` env vars in the ConfigMap. Ports are fixed inside the container (8080, 9090); `service.port` and `service.metricsPort` set the Service side. Validation: `helm lint` plus the schema; a missing `ingress.host` (or `tls.secretName` with TLS on) fails the render.
 
 ## Resources
 
 ### Deployment
 
-- 1 replica (ADR-003), `strategy` per AD-06.
+- 1 replica, `strategy: Recreate` (ADR-003, AD-06). Not configurable.
 - Container ports `http` (8080) and `metrics` (9090).
 - Config: `envFrom` the ConfigMap; secret values via `env.valueFrom.secretKeyRef` only if the Secret is enabled.
 - Probes: `livenessProbe` and `readinessProbe` on `http:/healthz` and `http:/readyz`.
@@ -58,7 +61,7 @@ The Ingress uses `http`; the in-cluster scraper uses `metrics`.
 - `ingressClassName` configurable (no default assumed).
 - Host configurable (e.g. `gmc.home.lan`) — it must be resolvable by the counter on the LAN (PD-06).
 - Routes **only** the ingest path (configurable, default `/log2.asp`) to Service port `http`. `/metrics` is never routed.
-- **TLS from an existing Secret.** The chart does not create or manage certificates. It takes the name of a `kubernetes.io/tls` Secret that already exists in the same namespace (e.g. created by External Secrets Operator or cert-manager):
+- **TLS from an existing Secret** (PD-10: cert-manager creates it). The chart does not create or manage certificates. It takes the name of a `kubernetes.io/tls` Secret that already exists in the same namespace (e.g. created by External Secrets Operator or cert-manager):
 
   ```yaml
   ingress:
@@ -81,6 +84,7 @@ The Ingress uses `http`; the in-cluster scraper uses `metrics`.
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"   # DNS-only: the IP is private
   ```
 
+- **Traefik (AD-09).** Route the host on the plain-HTTP entrypoint, and on the TLS one too if TLS is on, e.g. `traefik.ingress.kubernetes.io/router.entrypoints: web,websecure`. If Traefik redirects `web` to `websecure` globally (an entrypoint-level redirect), the device breaks: exclude this host, or serve it from an entrypoint without the redirect. Client IP: set `externalTrafficPolicy: Local` on Traefik's LoadBalancer Service and put Traefik's pod CIDR in `config.trustedProxies`.
 - **Both HTTP and HTTPS must work.** The counter very likely only speaks plain HTTP (open question Q-01). If TLS is enabled, the chart must **not** force an HTTP→HTTPS redirect on the ingest path, or the device will break. Controller-specific annotation to disable redirects is supplied through `ingress.annotations` (AD-09).
 - Source-IP restriction can be done at the Ingress layer via controller annotations (e.g. an allowlist of the counter's LAN IP) — see AD-04 and [06-security-open-questions.md](06-security-open-questions.md).
 

@@ -1,0 +1,20 @@
+radwatch-exporter {{ include "radwatch-exporter.imageTag" . }} is installed as {{ include "radwatch-exporter.fullname" . }} in namespace {{ .Release.Namespace }}.
+{{ if .Values.ingress.enabled }}
+Configure the counter (Menu -> Server):
+  Website: {{ .Values.ingress.host }}
+  URL:     {{ trimPrefix "/" (include "radwatch-exporter.ingestPath" .) }}
+
+The device calls plain HTTP on port 80: the ingress controller must serve this
+host on port 80 without redirecting to HTTPS.
+{{- else }}
+The Ingress is disabled. Test from your machine:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "radwatch-exporter.fullname" . }} 8080:{{ .Values.service.port }} 9090:{{ .Values.service.metricsPort }}
+  curl "localhost:8080{{ .Values.config.gmcmap.path }}?AID=1&GID=2&CPM=15&ACPM=13.2&uSV=0.075"
+  curl -s localhost:9090/metrics | grep radwatch_
+{{- end }}
+
+Metrics (in-cluster only): http://{{ include "radwatch-exporter.fullname" . }}.{{ .Release.Namespace }}.svc:{{ .Values.service.metricsPort }}/metrics
+{{- if .Values.config.debugRequests }}
+
+WARNING: config.debugRequests is on; every ingest request is logged with its headers.
+{{- end }}

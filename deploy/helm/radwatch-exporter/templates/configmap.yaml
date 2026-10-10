@@ -1,0 +1,26 @@
+{{- $c := .Values.config -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "radwatch-exporter.fullname" . }}
+  labels:
+    {{- include "radwatch-exporter.labels" . | nindent 4 }}
+data:
+  RADWATCH_LISTEN_ADDR: ":8080"
+  RADWATCH_METRICS_ADDR: ":9090"
+  RADWATCH_LOG_LEVEL: {{ $c.logLevel | quote }}
+  RADWATCH_STALE_AFTER: {{ $c.staleAfter | toString | quote }}
+  RADWATCH_DEBUG_REQUESTS: {{ $c.debugRequests | toString | quote }}
+  RADWATCH_ALLOWED_CIDRS: {{ join "," $c.allowedCIDRs | quote }}
+  RADWATCH_TRUSTED_PROXIES: {{ join "," $c.trustedProxies | quote }}
+  {{- $names := list }}
+  {{- range $id, $name := $c.deviceNames }}
+  {{- $names = append $names (printf "%s=%s" $id $name) }}
+  {{- end }}
+  RADWATCH_DEVICE_NAMES: {{ join "," $names | quote }}
+  RADWATCH_GMCMAP_PATH: {{ $c.gmcmap.path | quote }}
+  RADWATCH_GMCMAP_ALLOWED_GIDS: {{ join "," $c.gmcmap.allowedGIDs | quote }}
+  RADWATCH_GMCMAP_ALLOWED_AIDS: {{ join "," $c.gmcmap.allowedAIDs | quote }}
+  RADWATCH_GMCMAP_RESPONSE_STATUS: {{ $c.gmcmap.responseStatus | toString | quote }}
+  RADWATCH_GMCMAP_RESPONSE_BODY: {{ $c.gmcmap.responseBody | quote }}
+  RADWATCH_GMCMAP_FORWARD_URL: {{ $c.gmcmap.forwardURL | quote }}
