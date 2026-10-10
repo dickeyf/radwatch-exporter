@@ -38,7 +38,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | DONE (CI `chart` job: `helm lint --strict` + schema, kubeconform, kube-linter) |
 | IMPL-29 | 4 | Deploy to cluster; point device at the cluster; confirm metrics | IMPL-22..25 | DONE (2026-10-10: Flux, chart 0.2.0, ingest Service on a fixed private IP; uploads accepted with the counter\'s own address; Prometheus target up) |
 | IMPL-30 | 5 | Scrape config (ServiceMonitor template or Alloy snippet) | AD-07 | DONE (optional `servicemonitor.yaml`, `serviceMonitor.*` values) |
-| IMPL-31 | 5 | Grafana dashboard JSON | IMPL-30 | TODO |
+| IMPL-31 | 5 | Grafana dashboard JSON: CPM and dose rate on log scales (spikes from test sources must not flatten background). Reference lines on the dose-rate panel: the site's normal background; the public limit of 1 mSv/year as an hourly rate (~0.11 µSv/h above background); and "3.6 roentgen: not great, not terrible" at 0.036 Sv/h (~36 mSv/h; the counter saturates long before) | IMPL-30 | TODO |
 | IMPL-32 | 5 | Alert rules: device silent, dose-rate threshold | IMPL-30, PD-07 | TODO |
 | IMPL-33 | 6 | Optional NetworkPolicy template | IMPL-23 | TODO |
 | IMPL-34 | 6 | Optional forwarding to gmcmap.com/radmon.org (async, timeout, failures don't affect ingest) | PD-05 | TODO |

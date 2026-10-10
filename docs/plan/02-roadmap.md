@@ -62,7 +62,7 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 **Goal:** data in Grafana with alerts.
 
 - Scrape config (ServiceMonitor or Alloy, depending on AD-07).
-- Grafana dashboard JSON (CPM, µSv/h, time since last report; ACPM only as a long-term reference).
+- Grafana dashboard JSON (CPM, µSv/h, time since last report; ACPM only as a long-term reference), log scales, reference lines (background, 1 mSv/year, and 3.6 R/h "not great, not terrible"), IMPL-31.
 - Alert rules: device silent > N minutes; dose rate above threshold.
 
 **Exit:** dashboard live; silence alert fires when the counter is unplugged.
