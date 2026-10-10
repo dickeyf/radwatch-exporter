@@ -55,7 +55,7 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 - Hardened pod security context.
 - `helm lint`, `helm template` checks, and `ct`/kubeconform in CI.
 
-**Exit:** `helm install` in a test namespace; the device's request through the Ingress shows up in metrics.
+**Exit:** the chart is installed in the cluster; the device's uploads reach it (through the ingest Service, since the device needs an IP, Q-08) and show up in Prometheus.
 
 ## Phase 5 — Observability integration
 

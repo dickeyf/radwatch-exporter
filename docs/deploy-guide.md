@@ -1,10 +1,8 @@
 # Deploy guide: radwatch-exporter on Kubernetes
 
-A reference deployment for a home lab, written while doing it (IMPL-29, IMPL-37). All addresses, hostnames and IDs are placeholders: replace them with yours.
+A reference deployment for a home lab, written while doing it (IMPL-29, IMPL-37) and verified end to end. All addresses, hostnames and IDs are placeholders: replace them with yours.
 
 Reference stack: Flux 2.3, k3s with its bundled Traefik, Cilium with BGP LoadBalancer IPs, Prometheus Operator CRDs (kube-prometheus-stack), pfSense as router and firewall. The counter is a GQ GMC-500+ on a separate IoT VLAN.
-
-> Status: in progress. Sections marked _TBD_ are filled in as the reference deployment is done.
 
 ## The one constraint that shapes everything
 
@@ -141,12 +139,40 @@ On the counter, Menu → Server: Website `10.10.10.20` (the ingest IP, no port),
 
 ## 5. Verify
 
-_TBD_
+What the reference deployment showed, step by step.
 
-- Flux: `flux get helmreleases -n radwatch`.
-- The ingest Service has the pinned IP: `kubectl -n radwatch get svc` (`EXTERNAL-IP` of `radwatch-radwatch-exporter-ingest`).
-- Pod logs: a `reading accepted` line every upload interval (2 minutes on the reference counter), with `client_ip` = the counter's address.
-- Metrics: `radwatch_cpm{device="home",...}`; the target is up in Prometheus.
+**Flux applied the release:**
+
+```console
+$ kubectl -n radwatch get helmrelease
+NAME       READY   STATUS
+radwatch   True    Helm upgrade succeeded for release radwatch/radwatch.v2 with chart radwatch-exporter@0.2.0
+```
+
+**The ingest Service got the pinned IP**, and only the ingest port is on it:
+
+```console
+$ kubectl -n radwatch get svc
+NAME                                TYPE           EXTERNAL-IP    PORT(S)
+radwatch-radwatch-exporter          ClusterIP      <none>         80/TCP,9090/TCP
+radwatch-radwatch-exporter-ingest   LoadBalancer   10.10.10.20    80:30769/TCP
+```
+
+**Readings arrive with the counter's own address.** One `reading accepted` per upload interval (2 minutes on the reference counter). `client_ip` must be the counter, not a node: that proves `externalTrafficPolicy: Local` works and the allowlist can be on.
+
+```console
+$ kubectl -n radwatch logs deploy/radwatch-radwatch-exporter
+{"msg":"started radwatch-exporter","version":"v0.1.2",...}
+{"msg":"reading accepted","protocol":"gmcmap","device_id":"0034021","cpm":19,...,"client_ip":"192.168.1.50",...}
+```
+
+**Prometheus scrapes it.** In the Prometheus UI (Status → Targets) the target `serviceMonitor/radwatch/radwatch-radwatch-exporter/0` is up; the series carry `job="radwatch-radwatch-exporter"`. Useful queries:
+
+```promql
+radwatch_cpm{device="home"}                              # counts per minute
+radwatch_dose_rate_sieverts_per_hour * 1e6               # µSv/h
+time() - radwatch_last_report_timestamp_seconds          # seconds since the last upload (< 120 + jitter)
+```
 
 ## 6. Troubleshooting
 

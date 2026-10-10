@@ -36,7 +36,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-26 | 6 | Optional Secret (`create` / `existingSecret`), wired via `secretKeyRef` | IMPL-21, AD-04 | TODO (deferred from Phase 4, 2026-10-09: nothing to store until Q-04 or forwarding needs a secret) |
 | IMPL-27 | 4 | `values.schema.json`; `NOTES.txt` printing device Website/URL | IMPL-21 | DONE (`values.schema.json` (string maps, enums, patterns); NOTES prints Website/URL) |
 | IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | DOING |
-| IMPL-29 | 4 | Deploy to cluster; point device at Ingress; confirm metrics | IMPL-22..25 | DOING |
+| IMPL-29 | 4 | Deploy to cluster; point device at the cluster; confirm metrics | IMPL-22..25 | DONE (2026-10-10: Flux, chart 0.2.0, ingest Service on a fixed private IP; uploads accepted with the counter\'s own address; Prometheus target up) |
 | IMPL-30 | 5 | Scrape config (ServiceMonitor template or Alloy snippet) | AD-07 | DONE (optional `servicemonitor.yaml`, `serviceMonitor.*` values) |
 | IMPL-31 | 5 | Grafana dashboard JSON | IMPL-30 | TODO |
 | IMPL-32 | 5 | Alert rules: device silent, dose-rate threshold | IMPL-30, PD-07 | TODO |
@@ -44,7 +44,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-34 | 6 | Optional forwarding to gmcmap.com/radmon.org (async, timeout, failures don't affect ingest) | PD-05 | TODO |
 | IMPL-35 | 6 | Optional in-app rate limiting | AD-04 | TODO |
 | IMPL-36 | 4 | Publish the chart to GHCR as an OCI artifact (`oci://ghcr.io/dickeyf/charts/radwatch-exporter`) on `v*` tags; chart `version` and `appVersion` checked against the tag | IMPL-28, PD-08 | DONE (CI `publish-chart`; first release chart 0.1.1 / app 0.1.1, public) |
-| IMPL-37 | 4 | Deploy guide (`docs/deploy-guide.md`), written from the reference deployment (Flux, Traefik, external-dns/Cloudflare, Cilium BGP, pfSense); placeholders only | IMPL-29 | DOING |
+| IMPL-37 | 4 | Deploy guide (`docs/deploy-guide.md`), written from the reference deployment (Flux, Traefik, external-dns/Cloudflare, Cilium BGP, pfSense); placeholders only | IMPL-29 | DONE (2026-10-10: `docs/deploy-guide.md`, verified against the reference deployment) |
 | IMPL-38 | 4 | Optional ingest-only LoadBalancer Service in the chart (`ingestService`): fixed IP, port 80 only, `externalTrafficPolicy: Local`; chart 0.2.0 | IMPL-23, PD-06 | DONE (2026-10-10) |
 
 ---
