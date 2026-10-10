@@ -1,6 +1,7 @@
 package gmcmap
 
 import (
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -35,7 +36,7 @@ func TestParse(t *testing.T) {
 		{
 			"full GMC-500+ upload",
 			"AID=0230111&GID=0034021&CPM=15&ACPM=13.2&uSV=0.075",
-			ingest.Reading{Protocol: "gmcmap", AccountID: "0230111", DeviceID: "0034021", CPM: 15, ACPM: ptr(13.2), USvPerH: ptr(0.075)},
+			ingest.Reading{Protocol: "gmcmap", AccountID: "0230111", DeviceID: "0034021", CPM: 15, ACPM: ptr(13.2), SvPerH: ptr(0.075e-6)},
 		},
 		{
 			"only required fields",
@@ -45,7 +46,7 @@ func TestParse(t *testing.T) {
 		{
 			"case-insensitive names, unknown params ignored",
 			"aid=1&gid=2&cpm=15&usv=0.1&tmp=22.5&foo=bar",
-			ingest.Reading{Protocol: "gmcmap", AccountID: "1", DeviceID: "2", CPM: 15, USvPerH: ptr(0.1)},
+			ingest.Reading{Protocol: "gmcmap", AccountID: "1", DeviceID: "2", CPM: 15, SvPerH: ptr(0.1e-6)},
 		},
 		{
 			"empty optional values treated as absent",
@@ -61,7 +62,7 @@ func TestParse(t *testing.T) {
 			}
 			if got.Protocol != tt.want.Protocol || got.DeviceID != tt.want.DeviceID ||
 				got.AccountID != tt.want.AccountID || got.CPM != tt.want.CPM ||
-				!eqPtr(got.ACPM, tt.want.ACPM) || !eqPtr(got.USvPerH, tt.want.USvPerH) {
+				!eqPtr(got.ACPM, tt.want.ACPM) || !eqPtr(got.SvPerH, tt.want.SvPerH) {
 				t.Errorf("got %+v, want %+v", got, tt.want)
 			}
 		})
@@ -72,7 +73,7 @@ func eqPtr(a, b *float64) bool {
 	if a == nil || b == nil {
 		return a == b
 	}
-	return *a == *b
+	return math.Abs(*a-*b) <= 1e-12*math.Max(1, math.Abs(*b))
 }
 
 func TestParseErrors(t *testing.T) {

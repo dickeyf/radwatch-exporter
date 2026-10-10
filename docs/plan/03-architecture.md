@@ -35,7 +35,7 @@ Decided in ADR-007 (AD-05). Every device metric carries the same three labels:
 |--------|------|--------|-------|
 | `radwatch_cpm` | gauge | `protocol`, `device_id`, `device` | Last counts per minute |
 | `radwatch_acpm` | gauge | `protocol`, `device_id`, `device` | Last averaged CPM (only if the device sends it) |
-| `radwatch_dose_rate_microsieverts_per_hour` | gauge | `protocol`, `device_id`, `device` | Last dose rate as computed by the device (only if sent) |
+| `radwatch_dose_rate_sieverts_per_hour` | gauge | `protocol`, `device_id`, `device` | Last dose rate as computed by the device, converted from µSv/h to Sv/h (only if sent) |
 | `radwatch_last_report_timestamp_seconds` | gauge | `protocol`, `device_id`, `device` | Unix time of the last accepted reading |
 | `radwatch_reports_total` | counter | `protocol`, `device_id`, `device` | Accepted readings |
 | `radwatch_ingest_requests_total` | counter | `protocol`, `result` (`accepted`, `bad_request`, `rejected_allowlist`) | No device labels, so rejected requests can't create series |
@@ -104,7 +104,7 @@ Settings for one upload protocol live in their own section (`gmcmap:` in YAML, `
 
 Prefix `radwatch_`. Device labels are `protocol`, `device_id` and `device` (see Data model). `protocol` keeps IDs from different upload protocols apart. `device` lets dashboards show friendly names without a Grafana lookup; it falls back to the ID so the label is never empty. The GMCmap account ID (`AID`) is not a label: it identifies the gmcmap.com account, not the counter, and adds nothing to the series. Device series can only be created by a reading that passed validation and the allowlists, which bounds cardinality.
 
-Units: the dose rate stays in µSv/h (`_microsieverts_per_hour`) rather than the Prometheus base unit, because that is the unit the device reports and people read; converting to Sv would give values around 1e-7. The unit is spelled out in the name, so there is no ambiguity.
+Units: Prometheus base units, no SI prefixes. The device reports µSv/h; the exporter converts to Sv/h (`_sieverts_per_hour`, typical values around 1e-7). Hours rather than seconds because dose rates are always quoted per hour. Dashboards choose the display unit (e.g. µSv/h). Accumulated dose is left to queries (e.g. `avg_over_time(...[1d]) * 24` gives Sv per day); an in-exporter `_sieverts_total` counter was considered and not adopted for now.
 
 ## Decisions still open
 

@@ -54,7 +54,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | AD-02 | HTTP stack | stdlib `net/http` (Go 1.22+ routing) / chi / gin / echo | stdlib `net/http` (ADR-005) — two or three routes, no framework needed | DONE (2026-10-09) |
 | AD-03 | Port layout | Separate ports (8080 ingest, 9090 metrics) / single port with path routing | Separate: 8080 ingest, 9090 metrics (ADR-004) | DONE (2026-10-09) |
 | AD-04 | How to restrict the ingest endpoint | See layered list in 06 | Depends on Q-01..Q-04, Q-09 | TODO |
-| AD-05 | Metric names, units and labels | `gid` only / `gid`+`aid` / friendly `device` name | `radwatch_*` with `protocol`, `device_id`, `device` labels; no `aid`; dose rate in µSv/h (ADR-007) | DONE (2026-10-09) |
+| AD-05 | Metric names, units and labels | `gid` only / `gid`+`aid` / friendly `device` name | `radwatch_*` with `protocol`, `device_id`, `device` labels; no `aid`; dose rate in Sv/h, base units (ADR-007) | DONE (2026-10-09) |
 | AD-06 | Replicas and rollout strategy | 1 replica Recreate / 1 replica RollingUpdate | Stateless; >1 replica breaks scrape consistency | TODO |
 | AD-07 | How metrics are scraped | ServiceMonitor (Prometheus Operator CRD) / Alloy discovery / pod annotations | Depends on how the LGTM stack scrapes today | TODO |
 | AD-08 | Base image | `distroless/static:nonroot` / `scratch` / Chainguard static | distroless gives CA certs + nonroot user for free | TODO |

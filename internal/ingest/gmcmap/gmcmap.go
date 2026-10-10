@@ -75,6 +75,7 @@ func (h *Handler) reject(w http.ResponseWriter, status int, msg string) {
 // Parse validates a GMCmap query string. Parameter names are matched case-
 // insensitively, unknown parameters are ignored, and a known parameter given
 // twice is an error. GID and CPM are required; AID, ACPM and uSV are optional.
+// uSV (µSv/h) is converted to Sv/h.
 func Parse(rawQuery string) (ingest.Reading, error) {
 	values, err := url.ParseQuery(rawQuery)
 	if err != nil {
@@ -111,8 +112,12 @@ func Parse(rawQuery string) (ingest.Reading, error) {
 	if r.ACPM, err = number(params, "acpm", maxCPM, false); err != nil {
 		errs = append(errs, err)
 	}
-	if r.USvPerH, err = number(params, "usv", maxUSvPerH, false); err != nil {
+	usv, err := number(params, "usv", maxUSvPerH, false)
+	if err != nil {
 		errs = append(errs, err)
+	} else if usv != nil {
+		sv := *usv / 1e6 // the device reports µSv/h; readings carry base units
+		r.SvPerH = &sv
 	}
 	if err := errors.Join(errs...); err != nil {
 		return ingest.Reading{}, err

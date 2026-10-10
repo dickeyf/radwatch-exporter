@@ -18,7 +18,7 @@ type Reading struct {
 	AccountID string // account ID if the protocol has one (GMCmap AID); not a metric label
 	CPM       float64
 	ACPM      *float64 // nil when the device did not send it
-	USvPerH   *float64 // dose rate in µSv/h; nil when not sent
+	SvPerH    *float64 // dose rate in Sv/h (base unit); nil when not sent
 	Time      time.Time
 }
 
