@@ -113,3 +113,36 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: mode=max
           sbom: true
+
+  chart:
+    runs-on: ubuntu-latest
+    env:
+      CHART: deploy/helm/radwatch-exporter
+      KUBECONFORM_VERSION: v0.8.0
+      KUBE_LINTER_VERSION: v0.8.3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v5
+        with:
+          version: v3.22.0
+      - name: Install kubeconform and kube-linter
+        run: |
+          curl -fsSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" | tar -xz -C /usr/local/bin kubeconform
+          curl -fsSL "https://github.com/stackrox/kube-linter/releases/download/${KUBE_LINTER_VERSION}/kube-linter-linux.tar.gz" | tar -xz -C /usr/local/bin kube-linter
+      - name: Lint (values schema included)
+        run: |
+          helm lint "$CHART" --strict
+          helm lint "$CHART" --strict -f "$CHART/ci/full-values.yaml"
+      - name: Render
+        run: |
+          mkdir -p rendered
+          helm template rw "$CHART" -n radwatch > rendered/default.yaml
+          helm template rw "$CHART" -n radwatch -f "$CHART/ci/full-values.yaml" > rendered/full.yaml
+      - name: Validate against Kubernetes schemas (kubeconform)
+        run: |
+          kubeconform -strict -summary \
+            -schema-location default \
+            -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+            rendered/default.yaml rendered/full.yaml
+      - name: Policy check (kube-linter)
+        run: kube-linter lint --config "$CHART/.kube-linter.yaml" rendered/

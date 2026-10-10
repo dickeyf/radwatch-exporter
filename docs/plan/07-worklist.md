@@ -33,11 +33,11 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-23 | 4 | ClusterIP Service exposing `http` and `metrics` ports; free-form `service.annotations` / `service.labels` | IMPL-21 | DONE (`service.annotations` / `service.labels`) |
 | IMPL-24 | 4 | Ingress: class, host, ingest path only, annotations passthrough, TLS via existing secret name, HTTP must keep working | IMPL-23, AD-09 | DONE (host required, ingest path only, optional TLS secret, free-form annotations) |
 | IMPL-25 | 4 | ConfigMap from values, consumed via `envFrom` | IMPL-21, IMPL-04 | DONE (`config.*` → `RADWATCH_*`) |
-| IMPL-26 | 4 | Optional Secret (`create` / `existingSecret`), wired via `secretKeyRef` | IMPL-21, AD-04 | TODO |
+| IMPL-26 | 6 | Optional Secret (`create` / `existingSecret`), wired via `secretKeyRef` | IMPL-21, AD-04 | TODO (deferred from Phase 4, 2026-10-09: nothing to store until Q-04 or forwarding needs a secret) |
 | IMPL-27 | 4 | `values.schema.json`; `NOTES.txt` printing device Website/URL | IMPL-21 | DONE (`values.schema.json` (string maps, enums, patterns); NOTES prints Website/URL) |
-| IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | TODO |
+| IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | DOING |
 | IMPL-29 | 4 | Deploy to cluster; point device at Ingress; confirm metrics | IMPL-22..26 | TODO |
-| IMPL-30 | 5 | Scrape config (ServiceMonitor template or Alloy snippet) | AD-07 | TODO |
+| IMPL-30 | 5 | Scrape config (ServiceMonitor template or Alloy snippet) | AD-07 | DONE (optional `servicemonitor.yaml`, `serviceMonitor.*` values) |
 | IMPL-31 | 5 | Grafana dashboard JSON | IMPL-30 | TODO |
 | IMPL-32 | 5 | Alert rules: device silent, dose-rate threshold | IMPL-30, PD-07 | TODO |
 | IMPL-33 | 6 | Optional NetworkPolicy template | IMPL-23 | TODO |
@@ -56,7 +56,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | AD-04 | How to restrict the ingest endpoint | See layered list in 06 | Source IP (trusted-proxy XFF) → GID → AID in app; Ingress/NetworkPolicy outer layers; path-as-secret waits on Q-04 (ADR-009) | DONE (2026-10-09) |
 | AD-05 | Metric names, units and labels | `gid` only / `gid`+`aid` / friendly `device` name | `radwatch_*` with `protocol`, `device_id`, `device` labels; no `aid`; dose rate in Sv/h, base units (ADR-007) | DONE (2026-10-09) |
 | AD-06 | Replicas and rollout strategy | 1 replica Recreate / 1 replica RollingUpdate | 1 replica, `Recreate` (ADR-003) | DONE (2026-10-09) |
-| AD-07 | How metrics are scraped | ServiceMonitor (Prometheus Operator CRD) / Alloy discovery / pod annotations | Depends on how the LGTM stack scrapes today | TODO |
+| AD-07 | How metrics are scraped | ServiceMonitor (Prometheus Operator CRD) / Alloy discovery / pod annotations | Depends on how the LGTM stack scrapes today | DONE (2026-10-09: Prometheus Operator CRDs present; optional ServiceMonitor in the chart) |
 | AD-08 | Base image | `distroless/static:nonroot` / `scratch` / Chainguard static | `gcr.io/distroless/static-debian12:nonroot`, digest-pinned (ADR-010) | DONE (2026-10-09) |
 | AD-09 | Ingress controller specifics | ingress-nginx / Traefik / other | Controls annotations for no-redirect, IP allowlist, rate limit | DONE (2026-10-09: Traefik; chart stays generic (`className` + free-form annotations); route the `web` entrypoint without HTTPS redirect, see 05) |
 | AD-10 | Protect `/metrics`? | None (in-cluster + NetworkPolicy) / basic auth / TLS via `exporter-toolkit` | Probably none + NetworkPolicy | TODO |

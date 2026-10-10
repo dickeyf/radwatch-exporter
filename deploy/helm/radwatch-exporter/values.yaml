@@ -68,6 +68,19 @@ ingress:
     # Existing kubernetes.io/tls secret in the release namespace (e.g. from cert-manager).
     secretName: ""
 
+# Prometheus Operator ServiceMonitor for the metrics port (AD-07). Needs the
+# monitoring.coreos.com CRDs; Alloy's prometheus.operator.servicemonitors reads it too.
+serviceMonitor:
+  enabled: false
+  # Empty uses the scraper's default.
+  interval: ""
+  scrapeTimeout: ""
+  # Free-form; add whatever label your Prometheus/Alloy selects ServiceMonitors by.
+  labels: {}
+  annotations: {}
+  relabelings: []
+  metricRelabelings: []
+
 resources:
   requests:
     cpu: 10m

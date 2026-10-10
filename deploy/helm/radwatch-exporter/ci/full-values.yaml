@@ -1,0 +1,27 @@
+# Exercises every optional template and value in CI (IMPL-28). Placeholders only.
+commonLabels: {team: home}
+config:
+  allowedCIDRs: ["192.168.1.50"]
+  trustedProxies: ["10.0.0.0/8"]
+  deviceNames: {"0034021": office}
+  gmcmap:
+    allowedGIDs: ["0034021"]
+podAnnotations: {example.com/note: ci}
+podLabels: {tier: ci}
+service:
+  annotations: {example.com/note: ci}
+  labels: {tier: ci}
+ingress:
+  enabled: true
+  className: traefik
+  host: radwatch.example.com
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+  tls:
+    enabled: true
+    secretName: radwatch-tls
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  labels: {release: prometheus}

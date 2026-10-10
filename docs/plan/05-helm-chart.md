@@ -14,8 +14,10 @@ deploy/helm/radwatch-exporter/
 │   ├── ingress.yaml
 │   ├── configmap.yaml
 │   ├── secret.yaml           # not yet (IMPL-26)
-│   ├── servicemonitor.yaml   # not yet (AD-07, IMPL-30)
+│   ├── servicemonitor.yaml   # optional, serviceMonitor.enabled (AD-07)
 │   └── NOTES.txt             # prints the Website / URL to enter on the counter
+├── ci/full-values.yaml       # every optional value turned on, for CI (placeholders only)
+└── .kube-linter.yaml         # policy for the rendered manifests
 ```
 
 Implemented in IMPL-21–25 and 27; `values.yaml` documents every value. The chart's `appVersion` is the image tag used when `image.tag` is empty, so a `v<appVersion>` release must exist on GHCR (or set `image.tag` to an `edge`/`sha-` tag).
@@ -119,7 +121,7 @@ Keys are final (IMPL-04, ADR-006). The chart may also mount a YAML file and set 
 
 ### ServiceMonitor (optional)
 
-Rendered only if `serviceMonitor.enabled: true` and the CRD exists. Points at the `metrics` port. Whether to use this or an Alloy scrape rule is AD-07.
+Rendered only if `serviceMonitor.enabled: true` (AD-07: the cluster has the Prometheus Operator CRDs; Alloy's `prometheus.operator.servicemonitors` can read it too). Scrapes the `metrics` port at `/metrics`. Values: `interval`, `scrapeTimeout` (empty = scraper default), free-form `labels` (for whatever label your Prometheus or Alloy selects ServiceMonitors by) and `annotations`, `relabelings`, `metricRelabelings`.
 
 ### Metadata on every resource
 
@@ -127,7 +129,8 @@ Rendered only if `serviceMonitor.enabled: true` and the CRD exists. Points at th
 
 ## Chart quality gates
 
-- `helm lint` and `helm template | kubeconform -strict`.
-- `values.schema.json` validates types and required fields.
-- Rendered manifests pass a policy check (e.g. Kyverno/Polaris CLI) for non-root, read-only rootfs, dropped caps.
-- `NOTES.txt` prints the Website/URL values to enter on the counter.
+The CI `chart` job (IMPL-28) runs on every push, for the default values and for `ci/full-values.yaml`:
+
+- `helm lint --strict`, which also enforces `values.schema.json`.
+- `helm template | kubeconform -strict`, with the datreeio CRDs catalog for the ServiceMonitor.
+- `kube-linter` with all built-in checks (non-root, read-only rootfs, dropped caps, probes, resources...). Exclusions are listed with their reason in `.kube-linter.yaml` (single replica by design, no CPU limit, no ServiceAccount).

@@ -1,0 +1,15 @@
+# kube-linter policy for the rendered chart (IMPL-28).
+checks:
+  addAllBuiltIn: true
+  exclude:
+    # CPU limits are left off on purpose (throttling); memory is limited.
+    - unset-cpu-requirements
+    # Single replica by design (ADR-003).
+    - minimum-three-replicas
+    - no-anti-affinity
+    - no-rolling-update-strategy
+    # The chart has no ServiceAccount; the pod mounts no token (automountServiceAccountToken: false).
+    - default-service-account
+    - non-isolated-pod
+    # Image is pinned by tag or digest from values; the default tag is the release.
+    - latest-tag
