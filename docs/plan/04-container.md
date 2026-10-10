@@ -51,4 +51,15 @@ The CI `image` job (IMPL-20) builds the image on every push, then:
 - runs the Phase 1 smoke test against it (upload accepted, `radwatch_cpm` on `/metrics`);
 - fails if the image is 20 MiB or larger, or its user is not `65532:65532`.
 
-Still to add with IMPL-19: image scan (Trivy/Grype, fail on fixable HIGH/CRITICAL), multi-arch build and push to GHCR.
+It then scans the image with Trivy and fails on fixable HIGH/CRITICAL findings.
+
+## Publishing (IMPL-19)
+
+The CI `publish` job runs only on pushes to `main` and on `v*` tags, after `lint-test` and `image` pass. It builds `linux/amd64` and `linux/arm64` (PD-04; cross-compiled, no QEMU) and pushes to `ghcr.io/dickeyf/radwatch-exporter` with SBOM and provenance attestations. Tags (PD-08):
+
+| Trigger | Tags |
+|---------|------|
+| Tag `v0.1.0` | `0.1.0`, `0.1`, `sha-<short>` |
+| Push to `main` | `edge`, `sha-<short>` |
+
+There is no `latest`; deploy a version or a `sha-` tag.

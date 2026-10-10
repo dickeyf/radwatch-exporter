@@ -26,7 +26,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | DOING (device uploads accepted on :80; Q-02/03/06/08/10 answered, Q-07 partly; Q-07 = 2 min; still need an hour of readings, Q-05 and Q-11) |
 | IMPL-17 | 3 | Multi-stage Dockerfile: static build, distroless/scratch, UID 65532, no shell | IMPL-05, AD-08 | DONE (`Dockerfile`, distroless nonroot, digest-pinned, cross-compiling) |
 | IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | DONE (allowlist `.dockerignore`; `--build-arg VERSION` → `main.version`) |
-| IMPL-19 | 3 | CI: build (multi-arch if needed), scan image, push with semver + SHA tags | IMPL-17, PD-02, PD-04 | TODO |
+| IMPL-19 | 3 | CI: build (multi-arch if needed), scan image, push with semver + SHA tags | IMPL-17, PD-02, PD-04 | DOING |
 | IMPL-20 | 3 | Verify image runs with `--read-only --cap-drop ALL --user 65532` | IMPL-17 | DONE (CI `image` job: read-only, UID 65532, no caps, smoke test, size < 20 MiB) |
 | IMPL-21 | 4 | Helm chart scaffold, `_helpers.tpl`, labels (incl. free-form `commonLabels`), `values.yaml` | IMPL-17 | TODO |
 | IMPL-22 | 4 | Deployment: ports, probes, resources, hardened securityContext, `automountServiceAccountToken: false`, config checksum annotation, free-form `podAnnotations` / `podLabels` | IMPL-21 | TODO |
@@ -73,11 +73,11 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | PD-01 | Project / binary / chart name | `gmc-exporter`, `gmc-ingest`, `geiger-exporter`… | DONE (2026-10-09: `radwatch-exporter` for repo, module, binary, image and chart. Not `gmc…`: GMC is GQ's model prefix and also a GM brand, and other protocols than GMCmap may be added later) |
 | PD-02 | Repo host, CI and container registry | GitHub + GHCR / self-hosted Gitea + registry / other | DONE (2026-10-09: GitHub `dickeyf/radwatch-exporter`, public; GitHub Actions; images to GHCR `ghcr.io/dickeyf/…`) |
 | PD-03 | Public or private; licence | Private / public with MIT, Apache-2.0, AGPL… | DONE (2026-10-09: public, Apache-2.0; `LICENSE` at repo root) |
-| PD-04 | Target architectures | amd64 only / amd64 + arm64 (depends on cluster nodes) | TODO |
+| PD-04 | Target architectures | amd64 only / amd64 + arm64 (depends on cluster nodes) | DONE (2026-10-09: `linux/amd64` + `linux/arm64`) |
 | PD-05 | Keep reporting to the public map? | Forward to gmcmap.com / radmon.org / stop public reporting | TODO |
 | PD-06 | Exposure and hostname | LAN-only Ingress IP / also reachable from outside; hostname and LAN DNS entry. **Direction (2026-10-09, confirm in Phase 4):** private only; external-dns publishes a Cloudflare DNS-only record (`cloudflare-proxied: "false"`) pointing to a Cilium BGP LoadBalancer IP from a pfSense virtual subnet. Needs a pfSense DNS-rebind exception or host override, an IoT VLAN → LB IP:80 firewall rule, and `externalTrafficPolicy: Local` to keep the client IP. Device Website = the hostname (Q-08) | TODO |
 | PD-07 | Alert thresholds and routing | Silence threshold (5–10 min: the device uploads about every 2 min, Q-07), dose-rate threshold, where alerts go | TODO |
-| PD-08 | Versioning and release process | SemVer; chart version vs app version; tag-driven releases | TODO |
+| PD-08 | Versioning and release process | SemVer; chart version vs app version; tag-driven releases | DONE (2026-10-09: releases from `vX.Y.Z` git tags; image tags `X.Y.Z`, `X.Y`, `sha-<short>`, `edge` from `main`, no `latest`; chart has its own SemVer with `appVersion` = image version) |
 | PD-09 | Go version policy | Pin latest stable; update via Renovate/Dependabot | TODO |
 | PD-10 | Namespace and how the TLS secret is provisioned | External Secrets / cert-manager / manual; secret name convention | TODO |
 | PD-11 | Testing level | Unit only / + integration test with `httptest` / + kind cluster e2e in CI | TODO |
