@@ -24,10 +24,10 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-14 | 1 | README: run locally, curl smoke test, device configuration | IMPL-05 | DONE (commands verified against a local run) |
 | IMPL-15 | 2 | Debug mode logging raw query + headers to capture real device behaviour | IMPL-11 | DONE (`RADWATCH_DEBUG_REQUESTS`, `internal/ingest/debug.go`) |
 | IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | DOING (device uploads accepted on :80; Q-02/03/06/08/10 answered, Q-07 partly; still need an hour of readings, Q-05, Q-07 period) |
-| IMPL-17 | 3 | Multi-stage Dockerfile: static build, distroless/scratch, UID 65532, no shell | IMPL-05, AD-08 | TODO |
-| IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | TODO |
+| IMPL-17 | 3 | Multi-stage Dockerfile: static build, distroless/scratch, UID 65532, no shell | IMPL-05, AD-08 | DOING |
+| IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | DOING |
 | IMPL-19 | 3 | CI: build (multi-arch if needed), scan image, push with semver + SHA tags | IMPL-17, PD-02, PD-04 | TODO |
-| IMPL-20 | 3 | Verify image runs with `--read-only --cap-drop ALL --user 65532` | IMPL-17 | TODO |
+| IMPL-20 | 3 | Verify image runs with `--read-only --cap-drop ALL --user 65532` | IMPL-17 | DOING |
 | IMPL-21 | 4 | Helm chart scaffold, `_helpers.tpl`, labels (incl. free-form `commonLabels`), `values.yaml` | IMPL-17 | TODO |
 | IMPL-22 | 4 | Deployment: ports, probes, resources, hardened securityContext, `automountServiceAccountToken: false`, config checksum annotation, free-form `podAnnotations` / `podLabels` | IMPL-21 | TODO |
 | IMPL-23 | 4 | ClusterIP Service exposing `http` and `metrics` ports; free-form `service.annotations` / `service.labels` | IMPL-21 | TODO |
@@ -57,7 +57,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | AD-05 | Metric names, units and labels | `gid` only / `gid`+`aid` / friendly `device` name | `radwatch_*` with `protocol`, `device_id`, `device` labels; no `aid`; dose rate in Sv/h, base units (ADR-007) | DONE (2026-10-09) |
 | AD-06 | Replicas and rollout strategy | 1 replica Recreate / 1 replica RollingUpdate | Stateless; >1 replica breaks scrape consistency | TODO |
 | AD-07 | How metrics are scraped | ServiceMonitor (Prometheus Operator CRD) / Alloy discovery / pod annotations | Depends on how the LGTM stack scrapes today | TODO |
-| AD-08 | Base image | `distroless/static:nonroot` / `scratch` / Chainguard static | distroless gives CA certs + nonroot user for free | TODO |
+| AD-08 | Base image | `distroless/static:nonroot` / `scratch` / Chainguard static | `gcr.io/distroless/static-debian12:nonroot`, digest-pinned (ADR-010) | DONE (2026-10-09) |
 | AD-09 | Ingress controller specifics | ingress-nginx / Traefik / other | Controls annotations for no-redirect, IP allowlist, rate limit | TODO |
 | AD-10 | Protect `/metrics`? | None (in-cluster + NetworkPolicy) / basic auth / TLS via `exporter-toolkit` | Probably none + NetworkPolicy | TODO |
 | AD-11 | Stale data handling | Keep last value forever / drop series after N minutes without reports | Hybrid: value gauges expire after `stale_after` (default 5m), timestamp and counter kept (ADR-008) | DONE (2026-10-09) |

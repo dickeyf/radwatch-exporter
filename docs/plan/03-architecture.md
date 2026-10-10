@@ -128,6 +128,12 @@ Rejections answer honestly: 403 for allowlists, 400/414 for bad input. They are 
 
 Outside the app, the Ingress (strict path, LAN-only exposure, optional controller IP allowlist) and a NetworkPolicy add the outer layers listed in 06. Path-as-secret waits for Q-04. AD-13 is revisited if Phase 2 shows the device misbehaves on non-200 replies (Q-05); the reply would then become configurable.
 
+### ADR-010 — Container base image: distroless static, nonroot
+
+**Status:** Accepted (AD-08, confirmed 2026-10-09).
+
+Final stage `gcr.io/distroless/static-debian12:nonroot`: CA certificates (for future HTTPS forwarding, IMPL-34), a `nonroot` user with UID/GID 65532, tzdata, no shell or package manager. `scratch` would be a few hundred KB smaller but needs CA certs and a passwd entry copied in by hand; Chainguard's static image is equivalent but only `latest` is free to pull by tag. Build stage `golang:<GO_VERSION>-bookworm`. Both are pinned by digest and updated by a bot (PD-09). The build cross-compiles on the build platform, so arm64 images (PD-04) need no QEMU.
+
 ## Decisions still open
 
 See the `AD-*` items in [07-worklist.md](07-worklist.md).
