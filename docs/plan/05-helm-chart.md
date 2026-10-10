@@ -82,6 +82,7 @@ Holds non-secret configuration, consumed as env vars:
 | `RADWATCH_LISTEN_ADDR` | `:8080` | Ingest listener |
 | `RADWATCH_METRICS_ADDR` | `:9090` | Metrics listener |
 | `RADWATCH_LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
+| `RADWATCH_STALE_AFTER` | `5m` | Drop value gauges of a silent device (ADR-008) |
 | `RADWATCH_ALLOWED_CIDRS` | `192.168.1.50/32` | Source-IP allowlist (see trusted-proxy note below) |
 | `RADWATCH_TRUSTED_PROXIES` | `10.0.0.0/8` | CIDRs whose `X-Forwarded-For` is trusted |
 | `RADWATCH_DEVICE_NAMES` | `0034021=basement` | Optional friendly-name mapping (AD-05) |

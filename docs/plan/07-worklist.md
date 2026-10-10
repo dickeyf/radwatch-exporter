@@ -14,12 +14,12 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-04 | 1 | Config loader: env vars (+ optional file), defaults, validation, fail fast on bad config | IMPL-01 | DONE (`internal/config`; keys in README and 05-helm-chart) |
 | IMPL-05 | 1 | Ingest handler: GET on configured path, parse `AID`/`GID`/`CPM`/`ACPM`/`uSV`, ignore unknown params, numeric bounds, query length cap | IMPL-04, AD-02 | DONE (`internal/ingest/gmcmap`; not yet served by `main`, wired with IMPL-07/08/12) |
 | IMPL-06 | 1 | Allowlists: GID, AID, source CIDR with trusted-proxy `X-Forwarded-For` handling | IMPL-05, AD-04 | TODO |
-| IMPL-07 | 1 | Metrics registry: gauges, counters per data model in 03-architecture; custom registry + Go/process collectors | IMPL-04, AD-05 | TODO |
-| IMPL-08 | 1 | Separate metrics HTTP server on `:9090` serving `/metrics` | IMPL-07, AD-03 | TODO |
+| IMPL-07 | 1 | Metrics registry: gauges, counters per data model in 03-architecture; custom registry + Go/process collectors | IMPL-04, AD-05 | DONE (`internal/metrics`, incl. stale expiry per ADR-008) |
+| IMPL-08 | 1 | Separate metrics HTTP server on `:9090` serving `/metrics` | IMPL-07, AD-03 | DONE (Phase 1 curl exit check passes locally) |
 | IMPL-09 | 1 | `/healthz` (process up) and `/readyz` (listeners up) | IMPL-05 | TODO |
 | IMPL-10 | 1 | Configurable response body/status to the device | IMPL-05 | TODO |
 | IMPL-11 | 1 | Structured JSON logging (`log/slog`), one line per accepted/rejected reading | IMPL-05 | TODO |
-| IMPL-12 | 1 | Graceful shutdown on SIGTERM; HTTP server timeouts (read/header/write/idle) | IMPL-05 | TODO |
+| IMPL-12 | 1 | Graceful shutdown on SIGTERM; HTTP server timeouts (read/header/write/idle) | IMPL-05 | DONE (`main.go`; SIGTERM path not exercised on Windows yet) |
 | IMPL-13 | 1 | Unit tests: parser, allowlists, metrics values; table-driven with real example query strings | IMPL-05..07 | TODO |
 | IMPL-14 | 1 | README: run locally, curl smoke test, device configuration | IMPL-05 | TODO |
 | IMPL-15 | 2 | Debug mode logging raw query + headers to capture real device behaviour | IMPL-11 | TODO |
@@ -60,7 +60,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | AD-08 | Base image | `distroless/static:nonroot` / `scratch` / Chainguard static | distroless gives CA certs + nonroot user for free | TODO |
 | AD-09 | Ingress controller specifics | ingress-nginx / Traefik / other | Controls annotations for no-redirect, IP allowlist, rate limit | TODO |
 | AD-10 | Protect `/metrics`? | None (in-cluster + NetworkPolicy) / basic auth / TLS via `exporter-toolkit` | Probably none + NetworkPolicy | TODO |
-| AD-11 | Stale data handling | Keep last value forever / drop series after N minutes without reports | Prefer explicit `last_report_timestamp` + alert; maybe also expire | TODO |
+| AD-11 | Stale data handling | Keep last value forever / drop series after N minutes without reports | Hybrid: value gauges expire after `stale_after` (default 5m), timestamp and counter kept (ADR-008) | DONE (2026-10-09) |
 | AD-12 | Config source | Env vars only / env + YAML file | Env vars + optional YAML file, env wins (ADR-006) | DONE (2026-10-09) |
 | AD-13 | Response to rejected requests | Honest 4xx / always 200 (don't leak why) | Depends on Q-05: does the device misbehave on non-200? Stubbed as honest 400/414 in IMPL-05 | TODO |
 

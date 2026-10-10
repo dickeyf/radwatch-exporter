@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func env(m map[string]string) func(string) (string, bool) {
@@ -39,6 +40,7 @@ func TestLoadEnv(t *testing.T) {
 	cfg, err := Load(env(map[string]string{
 		"RADWATCH_LISTEN_ADDR":            "0.0.0.0:80",
 		"RADWATCH_LOG_LEVEL":              "debug",
+		"RADWATCH_STALE_AFTER":            "90s",
 		"RADWATCH_ALLOWED_CIDRS":          "192.168.1.50, 10.1.2.3/8",
 		"RADWATCH_TRUSTED_PROXIES":        "",
 		"RADWATCH_DEVICE_NAMES":           "0034021=basement",
@@ -54,6 +56,7 @@ func TestLoadEnv(t *testing.T) {
 	want := Default()
 	want.ListenAddr = "0.0.0.0:80"
 	want.LogLevel = "debug"
+	want.StaleAfter = 90 * time.Second
 	want.AllowedCIDRs = Prefixes{netip.MustParsePrefix("192.168.1.50/32"), netip.MustParsePrefix("10.0.0.0/8")}
 	want.TrustedProxies = nil
 	want.DeviceNames = map[string]string{"0034021": "basement"}
@@ -70,6 +73,7 @@ func TestLoadEnv(t *testing.T) {
 func TestLoadFileThenEnvOverrides(t *testing.T) {
 	path := writeFile(t, `
 metrics_addr: ":9191"
+stale_after: 10m
 allowed_cidrs: ["192.168.1.50"]
 device_names:
   "0034021": basement
@@ -86,6 +90,9 @@ gmcmap:
 	}
 	if cfg.MetricsAddr != ":9191" {
 		t.Errorf("metrics_addr from file: got %q", cfg.MetricsAddr)
+	}
+	if cfg.StaleAfter != 10*time.Minute {
+		t.Errorf("stale_after from file: got %s", cfg.StaleAfter)
 	}
 	if cfg.GMCMap.Path != "/from-env" {
 		t.Errorf("env should override file: got %q", cfg.GMCMap.Path)
@@ -120,6 +127,8 @@ func TestLoadErrors(t *testing.T) {
 		{"bad listen addr", map[string]string{"RADWATCH_LISTEN_ADDR": "8080"}, "", "listen_addr"},
 		{"bad port", map[string]string{"RADWATCH_METRICS_ADDR": ":99999"}, "", "invalid port"},
 		{"same ports", map[string]string{"RADWATCH_METRICS_ADDR": ":8080"}, "", "must differ"},
+		{"bad stale_after", map[string]string{"RADWATCH_STALE_AFTER": "5"}, "", "RADWATCH_STALE_AFTER"},
+		{"negative stale_after", map[string]string{"RADWATCH_STALE_AFTER": "-1m"}, "", "stale_after"},
 		{"bad log level", map[string]string{"RADWATCH_LOG_LEVEL": "loud"}, "", "log_level"},
 		{"bad cidr", map[string]string{"RADWATCH_ALLOWED_CIDRS": "1.2.3.4/40"}, "", "RADWATCH_ALLOWED_CIDRS"},
 		{"bad device names", map[string]string{"RADWATCH_DEVICE_NAMES": "0034021"}, "", "id=name"},

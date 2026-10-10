@@ -17,6 +17,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -29,6 +30,7 @@ type Config struct {
 	ListenAddr     string            `yaml:"listen_addr"`
 	MetricsAddr    string            `yaml:"metrics_addr"`
 	LogLevel       string            `yaml:"log_level"`
+	StaleAfter     time.Duration     `yaml:"stale_after"`
 	AllowedCIDRs   Prefixes          `yaml:"allowed_cidrs"`
 	TrustedProxies Prefixes          `yaml:"trusted_proxies"`
 	DeviceNames    map[string]string `yaml:"device_names"`
@@ -51,6 +53,7 @@ func Default() Config {
 		ListenAddr:  ":8080",
 		MetricsAddr: ":9090",
 		LogLevel:    "info",
+		StaleAfter:  5 * time.Minute,
 		GMCMap: GMCMap{
 			Path:           "/log2.asp",
 			ResponseStatus: 200,
@@ -116,6 +119,14 @@ func applyEnv(lookup func(string) (string, bool), cfg *Config) error {
 	str("RADWATCH_LISTEN_ADDR", &cfg.ListenAddr)
 	str("RADWATCH_METRICS_ADDR", &cfg.MetricsAddr)
 	str("RADWATCH_LOG_LEVEL", &cfg.LogLevel)
+	if v, ok := lookup("RADWATCH_STALE_AFTER"); ok {
+		d, err := time.ParseDuration(strings.TrimSpace(v))
+		if err != nil {
+			errs = append(errs, fmt.Errorf("RADWATCH_STALE_AFTER: %w", err))
+		} else {
+			cfg.StaleAfter = d
+		}
+	}
 	prefixes("RADWATCH_ALLOWED_CIDRS", &cfg.AllowedCIDRs)
 	prefixes("RADWATCH_TRUSTED_PROXIES", &cfg.TrustedProxies)
 	if v, ok := lookup("RADWATCH_DEVICE_NAMES"); ok {
@@ -165,6 +176,9 @@ func (c Config) Validate() error {
 	case "debug", "info", "warn", "error":
 	default:
 		addErr("log_level %q: want debug, info, warn or error", c.LogLevel)
+	}
+	if c.StaleAfter < 0 {
+		addErr("stale_after %s: must not be negative (0 disables expiry)", c.StaleAfter)
 	}
 	for id, name := range c.DeviceNames {
 		if id == "" || name == "" {

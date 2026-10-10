@@ -41,6 +41,8 @@ Decided in ADR-007 (AD-05). Every device metric carries the same three labels:
 | `radwatch_ingest_requests_total` | counter | `protocol`, `result` (`accepted`, `bad_request`, `rejected_allowlist`) | No device labels, so rejected requests can't create series |
 | standard `go_*` / `process_*` | — | — | From client_golang collectors |
 
+A device that has not reported for `stale_after` (default 5 min) loses its `cpm`, `acpm` and dose-rate series; its timestamp and `reports_total` stay (ADR-008). A gauge is also dropped when a reading stops including that field.
+
 ## Decisions taken
 
 ### ADR-001 — Implement the service in Go
@@ -105,6 +107,12 @@ Settings for one upload protocol live in their own section (`gmcmap:` in YAML, `
 Prefix `radwatch_`. Device labels are `protocol`, `device_id` and `device` (see Data model). `protocol` keeps IDs from different upload protocols apart. `device` lets dashboards show friendly names without a Grafana lookup; it falls back to the ID so the label is never empty. The GMCmap account ID (`AID`) is not a label: it identifies the gmcmap.com account, not the counter, and adds nothing to the series. Device series can only be created by a reading that passed validation and the allowlists, which bounds cardinality.
 
 Units: Prometheus base units, no SI prefixes. The device reports µSv/h; the exporter converts to Sv/h (`_sieverts_per_hour`, typical values around 1e-7). Hours rather than seconds because dose rates are always quoted per hour. Dashboards choose the display unit (e.g. µSv/h). Accumulated dose is left to queries (e.g. `avg_over_time(...[1d]) * 24` gives Sv per day); an in-exporter `_sieverts_total` counter was considered and not adopted for now.
+
+### ADR-008 — Expire value gauges of silent devices
+
+**Status:** Accepted (AD-11, confirmed 2026-10-09).
+
+When a device has not reported for `stale_after` (`RADWATCH_STALE_AFTER`, default `5m`, `0` disables), the exporter drops its value gauges (`radwatch_cpm`, `radwatch_acpm`, `radwatch_dose_rate_sieverts_per_hour`) at the next scrape. `radwatch_last_report_timestamp_seconds` and `radwatch_reports_total` are kept. Dashboards then show a gap instead of a flat, stale line, and the "device silent" alert stays a simple `time() - radwatch_last_report_timestamp_seconds > 300` with no `absent()`. The next accepted reading brings the gauges back. Alternatives rejected: keeping the last value forever (misleading graphs), dropping every series (alerting needs `absent()` per device).
 
 ## Decisions still open
 

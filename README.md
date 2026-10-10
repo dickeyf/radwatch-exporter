@@ -22,6 +22,7 @@ Defaults, then an optional YAML file (`RADWATCH_CONFIG_FILE`), then env vars; a 
 | `RADWATCH_LISTEN_ADDR` | `listen_addr` | `:8080` |
 | `RADWATCH_METRICS_ADDR` | `metrics_addr` | `:9090` |
 | `RADWATCH_LOG_LEVEL` | `log_level` | `info` |
+| `RADWATCH_STALE_AFTER` | `stale_after` | `5m` (`0` = keep values forever) |
 | `RADWATCH_ALLOWED_CIDRS` | `allowed_cidrs` | empty (allow all) |
 | `RADWATCH_TRUSTED_PROXIES` | `trusted_proxies` | empty |
 | `RADWATCH_DEVICE_NAMES` | `device_names` | empty |
