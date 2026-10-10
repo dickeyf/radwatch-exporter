@@ -23,14 +23,14 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-13 | 1 | Unit tests: parser, allowlists, metrics values; table-driven with real example query strings | IMPL-05..07 | DONE (table-driven tests in each package, incl. real GMC query strings and X-Forwarded-For cases) |
 | IMPL-14 | 1 | README: run locally, curl smoke test, device configuration | IMPL-05 | DONE (commands verified against a local run) |
 | IMPL-15 | 2 | Debug mode logging raw query + headers to capture real device behaviour | IMPL-11 | DONE (`RADWATCH_DEBUG_REQUESTS`, `internal/ingest/debug.go`) |
-| IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | TODO |
+| IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | DOING (device uploads accepted on :80; Q-02/03/06/08/10 answered, Q-07 partly; still need an hour of readings, Q-05, Q-07 period) |
 | IMPL-17 | 3 | Multi-stage Dockerfile: static build, distroless/scratch, UID 65532, no shell | IMPL-05, AD-08 | TODO |
 | IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | TODO |
 | IMPL-19 | 3 | CI: build (multi-arch if needed), scan image, push with semver + SHA tags | IMPL-17, PD-02, PD-04 | TODO |
 | IMPL-20 | 3 | Verify image runs with `--read-only --cap-drop ALL --user 65532` | IMPL-17 | TODO |
-| IMPL-21 | 4 | Helm chart scaffold, `_helpers.tpl`, labels, `values.yaml` | IMPL-17 | TODO |
-| IMPL-22 | 4 | Deployment: ports, probes, resources, hardened securityContext, `automountServiceAccountToken: false`, config checksum annotation | IMPL-21 | TODO |
-| IMPL-23 | 4 | ClusterIP Service exposing `http` and `metrics` ports | IMPL-21 | TODO |
+| IMPL-21 | 4 | Helm chart scaffold, `_helpers.tpl`, labels (incl. free-form `commonLabels`), `values.yaml` | IMPL-17 | TODO |
+| IMPL-22 | 4 | Deployment: ports, probes, resources, hardened securityContext, `automountServiceAccountToken: false`, config checksum annotation, free-form `podAnnotations` / `podLabels` | IMPL-21 | TODO |
+| IMPL-23 | 4 | ClusterIP Service exposing `http` and `metrics` ports; free-form `service.annotations` / `service.labels` | IMPL-21 | TODO |
 | IMPL-24 | 4 | Ingress: class, host, ingest path only, annotations passthrough, TLS via existing secret name, HTTP must keep working | IMPL-23, AD-09 | TODO |
 | IMPL-25 | 4 | ConfigMap from values, consumed via `envFrom` | IMPL-21, IMPL-04 | TODO |
 | IMPL-26 | 4 | Optional Secret (`create` / `existingSecret`), wired via `secretKeyRef` | IMPL-21, AD-04 | TODO |
@@ -75,8 +75,8 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | PD-03 | Public or private; licence | Private / public with MIT, Apache-2.0, AGPL… | DONE (2026-10-09: public, Apache-2.0; `LICENSE` at repo root) |
 | PD-04 | Target architectures | amd64 only / amd64 + arm64 (depends on cluster nodes) | TODO |
 | PD-05 | Keep reporting to the public map? | Forward to gmcmap.com / radmon.org / stop public reporting | TODO |
-| PD-06 | Exposure and hostname | LAN-only Ingress IP / also reachable from outside; hostname and LAN DNS entry | TODO |
-| PD-07 | Alert thresholds and routing | Silence threshold (e.g. 5 min), dose-rate threshold, where alerts go | TODO |
+| PD-06 | Exposure and hostname | LAN-only Ingress IP / also reachable from outside; hostname and LAN DNS entry. **Direction (2026-10-09, confirm in Phase 4):** private only; external-dns publishes a Cloudflare DNS-only record (`cloudflare-proxied: "false"`) pointing to a Cilium BGP LoadBalancer IP from a pfSense virtual subnet. Needs a pfSense DNS-rebind exception or host override, an IoT VLAN → LB IP:80 firewall rule, and `externalTrafficPolicy: Local` to keep the client IP. Device Website = the hostname (Q-08) | TODO |
+| PD-07 | Alert thresholds and routing | Silence threshold (5–10 min: the device uploads about every 2 min, Q-07), dose-rate threshold, where alerts go | TODO |
 | PD-08 | Versioning and release process | SemVer; chart version vs app version; tag-driven releases | TODO |
 | PD-09 | Go version policy | Pin latest stable; update via Renovate/Dependabot | TODO |
 | PD-10 | Namespace and how the TLS secret is provisioned | External Secrets / cert-manager / manual; secret name convention | TODO |

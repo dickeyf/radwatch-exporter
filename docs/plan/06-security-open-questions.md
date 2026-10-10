@@ -1,6 +1,6 @@
 # 06 — Security and open questions
 
-These are **not researched yet**. Answer them in Phase 2 with the real device (packet capture, request logs) or from GQ documentation, then record the answer here and update affected decisions.
+Partly answered in Phase 2 (see **Answers** below). Answer the rest with the real device (packet capture, request logs) or from GQ documentation, then record the answer here and update affected decisions.
 
 ## Open questions about the device
 
@@ -16,6 +16,34 @@ These are **not researched yet**. Answer them in Phase 2 with the real device (p
 | Q-08 | Does it send a `Host` header that matches the Website field? Does it use DNS or only IPs? | Ingress host-based routing needs a correct `Host` header and LAN DNS | Inspect request headers |
 | Q-09 | Static or DHCP IP for the counter? | Source-IP allowlist needs a stable IP (DHCP reservation) | Router config |
 | Q-10 | Does the firmware send the request through any proxy or from a different source than its own IP? | Source-IP allowlist validity | Packet capture |
+
+## Answers (Phase 2, GMC-500+ on the LAN, 2026-10-09)
+
+Captured with `RADWATCH_DEBUG_REQUESTS=true`. Example request as received:
+
+```
+GET /log2.asp?AID=0230111&GID=0034021&CPM=8&ACPM=14.89&uSV=0.05 HTTP/1.1
+Host: 192.168.1.10
+Accept: */*
+Connection: close
+```
+
+| ID | Answer |
+|----|--------|
+| Q-01 | Not tested. The device only offers a host and a path and talks plain HTTP on port 80, so HTTPS is moot for it; TLS on the Ingress only helps other clients |
+| Q-02 | No authentication: no `Authorization` or other credential header is sent |
+| Q-03 | **No port.** The Website field takes a hostname or IP only; `host:8080` did not work. The device always calls port 80 |
+| Q-04 | Not tested yet |
+| Q-05 | Pending: watch the device screen after an upload with the default `200 OK.ERR0` reply |
+| Q-06 | Exactly `AID`, `GID`, `CPM`, `ACPM`, `uSV`, in that casing, no extra fields. `uSV` has two decimals (steps of 0.01 µSv/h). `ACPM` stayed at 14.89 across the first readings while `CPM` moved: keep watching |
+| Q-07 | About every 2 minutes in the first readings (21:18:54 → 21:20:55). Whether the device can change it is not checked yet |
+| Q-08 | `Host` is exactly the Website value (an IP in the test). Only other headers: `Accept: */*`, `Connection: close`. No `User-Agent`. HTTP/1.1, one connection per upload |
+| Q-09 | Counter at `192.168.1.50` on the IoT VLAN; give it a DHCP reservation before using the source-IP allowlist |
+| Q-10 | No proxy or NAT: requests arrive from the counter's own address across VLANs, so a source-IP allowlist works |
+
+**WiFi.** The counter would not join the main home network (2.4/5/6 GHz, single name) but joined the IoT network. Its WiFi stack is 2.4 GHz-only and old; WPA3/transition mode, required PMF, 802.11r, band steering and WiFi 6/6E beacon extras commonly break such devices. Use a 2.4 GHz WPA2-only network with PMF optional or off, no fast roaming and no band steering.
+
+**Consequences.** The Ingress must serve plain HTTP on port 80 for the ingest path with no HTTPS redirect. Use a hostname on the device, not an IP, so the Ingress host rule matches `Host` (PD-06). The stale timeout (5 min) survives one missed upload; the silence alert threshold should be 5–10 min (PD-07).
 
 ## Threat model (short)
 

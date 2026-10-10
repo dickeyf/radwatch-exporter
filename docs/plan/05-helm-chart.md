@@ -27,6 +27,7 @@ deploy/helm/radwatch-exporter/
 - Container ports `http` (8080) and `metrics` (9090).
 - Config: `envFrom` the ConfigMap; secret values via `env.valueFrom.secretKeyRef` only if the Secret is enabled.
 - Probes: `livenessProbe` and `readinessProbe` on `http:/healthz` and `http:/readyz`.
+- `podAnnotations` and `podLabels`: free-form maps passed through to the pod template.
 - Resources: small requests/limits (e.g. 10m CPU / 16Mi request, 64Mi limit) — tune after Phase 2.
 - Pod and container security context as in [04-container.md](04-container.md).
 - `automountServiceAccountToken: false`.
@@ -50,6 +51,8 @@ spec:
 
 The Ingress uses `http`; the in-cluster scraper uses `metrics`.
 
+`service.annotations` and `service.labels` are free-form maps passed through as-is (e.g. Cilium LB IP pool or BGP announcement labels, or external-dns when the Service is exposed directly).
+
 ### Ingress
 
 - `ingressClassName` configurable (no default assumed).
@@ -64,10 +67,18 @@ The Ingress uses `http`; the in-cluster scraper uses `metrics`.
     host: gmc.home.lan
     path: /log2.asp
     pathType: Exact
-    annotations: {}
+    annotations: {}           # free-form, passed through as-is
     tls:
       enabled: false
       secretName: ""          # existing TLS secret in this namespace
+  ```
+
+- `ingress.annotations` is a free-form map passed through unchanged, for external-dns and controller-specific settings. Example for a private hostname published by external-dns to Cloudflare:
+
+  ```yaml
+  ingress:
+    annotations:
+      external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"   # DNS-only: the IP is private
   ```
 
 - **Both HTTP and HTTPS must work.** The counter very likely only speaks plain HTTP (open question Q-01). If TLS is enabled, the chart must **not** force an HTTP→HTTPS redirect on the ingest path, or the device will break. Controller-specific annotation to disable redirects is supplied through `ingress.annotations` (AD-09).
@@ -105,6 +116,10 @@ Keys are final (IMPL-04, ADR-006). The chart may also mount a YAML file and set 
 ### ServiceMonitor (optional)
 
 Rendered only if `serviceMonitor.enabled: true` and the CRD exists. Points at the `metrics` port. Whether to use this or an Alloy scrape rule is AD-07.
+
+### Metadata on every resource
+
+`commonLabels` is added to every rendered resource. Together with `podAnnotations`/`podLabels`, `service.annotations`/`service.labels` and `ingress.annotations`, no metadata change should ever need a chart fork. The schema types all of these as string-to-string maps.
 
 ## Chart quality gates
 
