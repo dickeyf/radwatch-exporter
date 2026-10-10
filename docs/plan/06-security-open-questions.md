@@ -16,6 +16,7 @@ Partly answered in Phase 2 (see **Answers** below). Answer the rest with the rea
 | Q-08 | Does it send a `Host` header that matches the Website field? Does it use DNS or only IPs? | Ingress host-based routing needs a correct `Host` header and LAN DNS | Inspect request headers |
 | Q-09 | Static or DHCP IP for the counter? | Source-IP allowlist needs a stable IP (DHCP reservation) | Router config |
 | Q-10 | Does the firmware send the request through any proxy or from a different source than its own IP? | Source-IP allowlist validity | Packet capture |
+| Q-11 | Does `uSV` stay in µSv/h above 1 mSv/h, or does the firmware switch units (e.g. `uSV=3.00` meaning 3 mSv/h) like the screen may? | A silent unit switch would make the dose-rate metric 1000× too low; a unit suffix would be rejected as `bad_request` | Expose the counter to > 1 mSv/h (unbagged high-grade ore at contact) with `RADWATCH_DEBUG_REQUESTS=true` and read the raw `uSV=` value |
 
 ## Answers (Phase 2, GMC-500+ on the LAN, 2026-10-09)
 
@@ -40,6 +41,7 @@ Connection: close
 | Q-08 | `Host` is exactly the Website value (an IP in the test). Only other headers: `Accept: */*`, `Connection: close`. No `User-Agent`. HTTP/1.1, one connection per upload |
 | Q-09 | Counter at `192.168.1.50` on the IoT VLAN; give it a DHCP reservation before using the source-IP allowlist |
 | Q-10 | No proxy or NAT: requests arrive from the counter's own address across VLANs, so a source-IP allowlist works |
+| Q-11 | Open. Up to 271 µSv/h the device sent plain µSv/h (`uSV=255.14`, `uSV=270.88`, with ~42–45k CPM). Expected to stay µSv/h because the parameter has no unit and gmcmap.com reads it as µSv/h. Fallback if it switches: warn when CPM and dose rate disagree by orders of magnitude (this unit runs at ~150–170 CPM per µSv/h) |
 
 **WiFi.** The counter would not join the main home network (2.4/5/6 GHz, single name) but joined the IoT network. Its WiFi stack is 2.4 GHz-only and old; WPA3/transition mode, required PMF, 802.11r, band steering and WiFi 6/6E beacon extras commonly break such devices. Use a 2.4 GHz WPA2-only network with PMF optional or off, no fast roaming and no band steering.
 
