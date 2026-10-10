@@ -23,11 +23,11 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-13 | 1 | Unit tests: parser, allowlists, metrics values; table-driven with real example query strings | IMPL-05..07 | DONE (table-driven tests in each package, incl. real GMC query strings and X-Forwarded-For cases) |
 | IMPL-14 | 1 | README: run locally, curl smoke test, device configuration | IMPL-05 | DONE (commands verified against a local run) |
 | IMPL-15 | 2 | Debug mode logging raw query + headers to capture real device behaviour | IMPL-11 | DONE (`RADWATCH_DEBUG_REQUESTS`, `internal/ingest/debug.go`) |
-| IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | DOING (device uploads accepted on :80; Q-02/03/06/08/10 answered, Q-07 partly; still need an hour of readings, Q-05, Q-07 period) |
-| IMPL-17 | 3 | Multi-stage Dockerfile: static build, distroless/scratch, UID 65532, no shell | IMPL-05, AD-08 | DOING |
-| IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | DOING |
+| IMPL-16 | 2 | Test with the real GMC-500+ on the LAN; fill answers in 06-security-open-questions | IMPL-15 | DOING (device uploads accepted on :80; Q-02/03/06/08/10 answered, Q-07 partly; Q-07 = 2 min; still need an hour of readings and Q-05) |
+| IMPL-17 | 3 | Multi-stage Dockerfile: static build, distroless/scratch, UID 65532, no shell | IMPL-05, AD-08 | DONE (`Dockerfile`, distroless nonroot, digest-pinned, cross-compiling) |
+| IMPL-18 | 3 | `.dockerignore`; version injected via `-ldflags` | IMPL-17 | DONE (allowlist `.dockerignore`; `--build-arg VERSION` → `main.version`) |
 | IMPL-19 | 3 | CI: build (multi-arch if needed), scan image, push with semver + SHA tags | IMPL-17, PD-02, PD-04 | TODO |
-| IMPL-20 | 3 | Verify image runs with `--read-only --cap-drop ALL --user 65532` | IMPL-17 | DOING |
+| IMPL-20 | 3 | Verify image runs with `--read-only --cap-drop ALL --user 65532` | IMPL-17 | DONE (CI `image` job: read-only, UID 65532, no caps, smoke test, size < 20 MiB) |
 | IMPL-21 | 4 | Helm chart scaffold, `_helpers.tpl`, labels (incl. free-form `commonLabels`), `values.yaml` | IMPL-17 | TODO |
 | IMPL-22 | 4 | Deployment: ports, probes, resources, hardened securityContext, `automountServiceAccountToken: false`, config checksum annotation, free-form `podAnnotations` / `podLabels` | IMPL-21 | TODO |
 | IMPL-23 | 4 | ClusterIP Service exposing `http` and `metrics` ports; free-form `service.annotations` / `service.labels` | IMPL-21 | TODO |

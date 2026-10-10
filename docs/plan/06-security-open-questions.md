@@ -36,7 +36,7 @@ Connection: close
 | Q-04 | Not tested yet |
 | Q-05 | Pending: watch the device screen after an upload with the default `200 OK.ERR0` reply |
 | Q-06 | Exactly `AID`, `GID`, `CPM`, `ACPM`, `uSV`, in that casing, no extra fields. `uSV` has two decimals (steps of 0.01 µSv/h). `ACPM` stayed at 14.89 across the first readings while `CPM` moved: keep watching |
-| Q-07 | About every 2 minutes in the first readings (21:18:54 → 21:20:55). Whether the device can change it is not checked yet |
+| Q-07 | Every 2 minutes, as configured on the device |
 | Q-08 | `Host` is exactly the Website value (an IP in the test). Only other headers: `Accept: */*`, `Connection: close`. No `User-Agent`. HTTP/1.1, one connection per upload |
 | Q-09 | Counter at `192.168.1.50` on the IoT VLAN; give it a DHCP reservation before using the source-IP allowlist |
 | Q-10 | No proxy or NAT: requests arrive from the counter's own address across VLANs, so a source-IP allowlist works |
