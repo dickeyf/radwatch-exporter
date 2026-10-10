@@ -1,15 +1,27 @@
-# kube-linter policy for the rendered chart (IMPL-28).
+# kube-linter policy for the rendered chart (IMPL-28): the default checks plus
+# explicit security checks. The opinionated style checks (sorted keys, owner
+# labels, DNS config...) are not enabled.
 checks:
-  addAllBuiltIn: true
+  include:
+    - drop-net-raw-capability
+    - no-read-only-root-fs
+    - privilege-escalation-container
+    - privileged-container
+    - read-secret-from-env-var
+    - run-as-non-root
+    - unsafe-sysctls
+    - writable-host-mount
+    - host-network
+    - host-pid
+    - host-ipc
+    - liveness-port
+    - readiness-port
+    - unset-memory-requirements
+    - latest-tag
   exclude:
     # CPU limits are left off on purpose (throttling); memory is limited.
     - unset-cpu-requirements
-    # Single replica by design (ADR-003).
-    - minimum-three-replicas
-    - no-anti-affinity
-    - no-rolling-update-strategy
     # The chart has no ServiceAccount; the pod mounts no token (automountServiceAccountToken: false).
     - default-service-account
-    - non-isolated-pod
-    # Image is pinned by tag or digest from values; the default tag is the release.
-    - latest-tag
+    # Single replica by design (ADR-003).
+    - no-anti-affinity
