@@ -74,7 +74,7 @@ make run
 
 ## Kubernetes (Helm)
 
-The chart is in [deploy/helm/radwatch-exporter](deploy/helm/radwatch-exporter); every value is documented in its `values.yaml`. Example for a private hostname behind Traefik, published by external-dns as a Cloudflare DNS-only record:
+The chart is in [deploy/helm/radwatch-exporter](deploy/helm/radwatch-exporter); every value is documented in its `values.yaml`. For a full walkthrough (Flux, Traefik, external-dns, Cilium BGP, pfSense), see the [deploy guide](docs/deploy-guide.md). Example for a private hostname behind Traefik, published by external-dns as a Cloudflare DNS-only record:
 
 ```yaml
 # my-values.yaml
