@@ -45,6 +45,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-35 | 6 | Optional in-app rate limiting | AD-04 | TODO |
 | IMPL-36 | 4 | Publish the chart to GHCR as an OCI artifact (`oci://ghcr.io/dickeyf/charts/radwatch-exporter`) on `v*` tags; chart `version` and `appVersion` checked against the tag | IMPL-28, PD-08 | DONE (CI `publish-chart`; first release chart 0.1.1 / app 0.1.1, public) |
 | IMPL-37 | 4 | Deploy guide (`docs/deploy-guide.md`), written from the reference deployment (Flux, Traefik, external-dns/Cloudflare, Cilium BGP, pfSense); placeholders only | IMPL-29 | DOING |
+| IMPL-38 | 4 | Optional ingest-only LoadBalancer Service in the chart (`ingestService`): fixed IP, port 80 only, `externalTrafficPolicy: Local`; chart 0.2.0 | IMPL-23, PD-06 | DONE (2026-10-10) |
 
 ---
 

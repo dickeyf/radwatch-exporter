@@ -1,4 +1,10 @@
 radwatch-exporter {{ include "radwatch-exporter.imageTag" . }} is installed as {{ include "radwatch-exporter.fullname" . }} in namespace {{ .Release.Namespace }}.
+{{ if .Values.ingestService.enabled }}
+Counters configured by IP (GMC-500+, Menu -> Server):
+  Website: the external IP of service {{ include "radwatch-exporter.fullname" . }}-ingest
+           kubectl -n {{ .Release.Namespace }} get svc {{ include "radwatch-exporter.fullname" . }}-ingest
+  URL:     {{ trimPrefix "/" .Values.config.gmcmap.path }}
+{{- end }}
 {{ if .Values.ingress.enabled }}
 Configure the counter (Menu -> Server):
   Website: {{ .Values.ingress.host }}

@@ -38,7 +38,7 @@ Connection: close
 | Q-05 | No visible error on the device with the default `200 OK.ERR0` reply over a one-hour run. Behaviour on non-200 replies not tested (AD-13 keeps honest 4xx; only rejected uploads get them) |
 | Q-06 | Exactly `AID`, `GID`, `CPM`, `ACPM`, `uSV`, in that casing, no extra fields. `uSV` has two decimals (steps of 0.01 µSv/h). `ACPM` stayed at 14.89 across the first readings while `CPM` moved: keep watching |
 | Q-07 | Every 2 minutes, as configured on the device. Over one hour: 30 uploads, no gaps, intervals between 1:56 and 2:08 |
-| Q-08 | `Host` is exactly the Website value (an IP in the test). Only other headers: `Accept: */*`, `Connection: close`. No `User-Agent`. HTTP/1.1, one connection per upload |
+| Q-08 | **The device does not resolve hostnames**: with a name as Website it sends no DNS query at all, so Website must be an IP (found during the cluster deployment). `Host` is exactly the Website value. Only other headers: `Accept: */*`, `Connection: close`. No `User-Agent`. HTTP/1.1, one connection per upload |
 | Q-09 | DHCP, on a separate IoT VLAN; give it a reservation before using the source-IP allowlist |
 | Q-10 | No proxy or NAT: requests arrive from the counter's own address across VLANs, so a source-IP allowlist works |
 | Q-11 | Open, deferred: to be tested later (> 1 mSv/h needs the ore unbagged). Up to 272 µSv/h the device sent plain µSv/h (`uSV=255.14`, `uSV=270.88`, with ~42–45k CPM). Expected to stay µSv/h because the parameter has no unit and gmcmap.com reads it as µSv/h. Fallback if it switches: warn when CPM and dose rate disagree by orders of magnitude (this unit runs at ~150–170 CPM per µSv/h) |
@@ -47,7 +47,7 @@ Connection: close
 
 **WiFi.** The counter would not join the main home network (2.4/5/6 GHz, single name) but joined the IoT network. Its WiFi stack is 2.4 GHz-only and old; WPA3/transition mode, required PMF, 802.11r, band steering and WiFi 6/6E beacon extras commonly break such devices. Use a 2.4 GHz WPA2-only network with PMF optional or off, no fast roaming and no band steering.
 
-**Consequences.** The Ingress must serve plain HTTP on port 80 for the ingest path with no HTTPS redirect. Use a hostname on the device, not an IP, so the Ingress host rule matches `Host` (PD-06). The stale timeout (5 min) survives one missed upload; the silence alert threshold should be 5–10 min (PD-07).
+**Consequences.** The Ingress must serve plain HTTP on port 80 for the ingest path with no HTTPS redirect. The device must be given an IP, so it cannot use a host-based Ingress rule: it reaches the exporter through a dedicated LoadBalancer Service (`ingestService`, PD-06). The stale timeout (5 min) survives one missed upload; the silence alert threshold should be 5–10 min (PD-07).
 
 ## Threat model (short)
 

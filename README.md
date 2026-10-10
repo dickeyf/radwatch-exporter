@@ -74,20 +74,31 @@ make run
 
 ## Kubernetes (Helm)
 
-The chart is in [deploy/helm/radwatch-exporter](deploy/helm/radwatch-exporter); every value is documented in its `values.yaml`. For a full walkthrough (Flux, Traefik, external-dns, Cilium BGP, pfSense), see the [deploy guide](docs/deploy-guide.md). Example for a private hostname behind Traefik, published by external-dns as a Cloudflare DNS-only record:
+The chart is in [deploy/helm/radwatch-exporter](deploy/helm/radwatch-exporter); every value is documented in its `values.yaml`. For a full walkthrough (Flux, Cilium BGP, pfSense), see the [deploy guide](docs/deploy-guide.md).
+
+**The GMC-500+ cannot resolve hostnames**: its Website field must be an IP. Give the exporter its own LoadBalancer IP with `ingestService` (ingest port only, `externalTrafficPolicy: Local` so the counter's address survives for `allowedCIDRs`):
 
 ```yaml
 # my-values.yaml
 config:
-  allowedCIDRs: ["192.168.1.50"]       # the counter (DHCP reservation)
-  trustedProxies: ["10.0.0.0/8"]       # Traefik's pod CIDR
+  allowedCIDRs: ["192.168.1.50"]        # the counter (DHCP reservation)
   deviceNames: {"0034021": office}
   gmcmap:
     allowedGIDs: ["0034021"]
+ingestService:
+  enabled: true
+  loadBalancerIP: 10.10.10.20           # the counter's Website setting
+```
+
+Optionally, also expose it by name through an Ingress for other clients (curl, a browser), e.g. behind Traefik with external-dns publishing a Cloudflare DNS-only record. Add to the values above:
+
+```yaml
+config:
+  trustedProxies: ["10.0.0.0/8"]       # Traefik's pod CIDR
 ingress:
   enabled: true
   className: traefik
-  host: radwatch.example.com           # also the Website setting on the counter
+  host: radwatch.example.com           # for other clients; the counter uses the ingest IP
   annotations:
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "false"
     traefik.ingress.kubernetes.io/router.entrypoints: web
@@ -100,7 +111,7 @@ helm install radwatch oci://ghcr.io/dickeyf/charts/radwatch-exporter --version <
 helm install radwatch deploy/helm/radwatch-exporter -n radwatch --create-namespace -f my-values.yaml
 ```
 
-The counter only speaks plain HTTP on port 80, so the host must be served on Traefik's `web` entrypoint without an HTTPS redirect. Set `externalTrafficPolicy: Local` on Traefik's LoadBalancer Service so the counter's IP survives for `allowedCIDRs`. `/metrics` stays in the cluster on Service port 9090.
+Counters only speak plain HTTP on port 80: if you route them through an Ingress, serve the path on a plain-HTTP entrypoint without an HTTPS redirect. `/metrics` stays in the cluster on Service port 9090; `ingestService` never exposes it.
 
 ## Configuration
 

@@ -58,10 +58,14 @@ The Ingress uses `http`; the in-cluster scraper uses `metrics`.
 
 `service.annotations` and `service.labels` are free-form maps passed through as-is (e.g. Cilium LB IP pool or BGP announcement labels, or external-dns when the Service is exposed directly).
 
+### Ingest Service (optional, IMPL-38)
+
+`ingestService.enabled: true` adds a second Service, `<fullname>-ingest`, exposing **only** the ingest port, by default as a LoadBalancer with `externalTrafficPolicy: Local`. It exists because the GMC-500+ cannot resolve hostnames (Q-08): it must be given an IP, and an Ingress cannot route by IP. Values: `type`, `port` (80), `externalTrafficPolicy`, `loadBalancerIP`, `loadBalancerClass`, `loadBalancerSourceRanges`, free-form `annotations` (e.g. `lbipam.cilium.io/ips` to pin the address with Cilium) and `labels` (e.g. a Cilium IP-pool selector). `Local` keeps the client's address, so `config.allowedCIDRs` works without trusted proxies. The metrics port is never part of it.
+
 ### Ingress
 
 - `ingressClassName` configurable (no default assumed).
-- Host configurable (e.g. `radwatch.example.com`) — it must be resolvable by the counter on the LAN (PD-06).
+- Host configurable (e.g. `radwatch.example.com`). Optional since the counter cannot use it (it needs an IP, Q-08): use `ingestService` for the counter and the Ingress for other clients.
 - Routes **only** the ingest path (configurable, default `/log2.asp`) to Service port `http`. `/metrics` is never routed.
 - **TLS from an existing Secret** (PD-10: cert-manager creates it). The chart does not create or manage certificates. It takes the name of a `kubernetes.io/tls` Secret that already exists in the same namespace (e.g. created by External Secrets Operator or cert-manager):
 

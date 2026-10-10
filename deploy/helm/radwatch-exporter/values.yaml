@@ -51,6 +51,25 @@ service:
   annotations: {}
   labels: {}
 
+# Ingest-only Service with its own address, for counters configured by IP.
+# The GMC-500+ does not resolve hostnames, so it cannot use the Ingress's host
+# rule: give it a fixed LoadBalancer IP instead. Only the ingest port is exposed.
+ingestService:
+  enabled: false
+  type: LoadBalancer
+  port: 80
+  # Local keeps the counter's source address, so config.allowedCIDRs works.
+  externalTrafficPolicy: Local
+  # Fixed address. Some implementations prefer an annotation instead
+  # (Cilium LB-IPAM: lbipam.cilium.io/ips).
+  loadBalancerIP: ""
+  loadBalancerClass: ""
+  # Optional extra filter at the load balancer, e.g. ["192.168.1.50/32"].
+  loadBalancerSourceRanges: []
+  # Free-form, e.g. an IP-pool selector label for Cilium.
+  annotations: {}
+  labels: {}
+
 ingress:
   enabled: false
   # e.g. traefik

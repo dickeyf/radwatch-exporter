@@ -1,0 +1,39 @@
+{{- if .Values.ingestService.enabled -}}
+# Ingest-only Service for counters that must be configured with an IP (the
+# GMC-500+ does not resolve hostnames). Never exposes the metrics port.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "radwatch-exporter.fullname" . }}-ingest
+  labels:
+    {{- include "radwatch-exporter.labels" . | nindent 4 }}
+    {{- with .Values.ingestService.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.ingestService.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.ingestService.type }}
+  {{- if ne .Values.ingestService.type "ClusterIP" }}
+  externalTrafficPolicy: {{ .Values.ingestService.externalTrafficPolicy }}
+  {{- end }}
+  {{- with .Values.ingestService.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+  {{- end }}
+  {{- with .Values.ingestService.loadBalancerClass }}
+  loadBalancerClass: {{ . }}
+  {{- end }}
+  {{- with .Values.ingestService.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    {{- include "radwatch-exporter.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.ingestService.port }}
+      targetPort: http
+      protocol: TCP
+{{- end }}

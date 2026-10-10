@@ -11,6 +11,12 @@ podLabels: {tier: ci}
 service:
   annotations: {example.com/note: ci}
   labels: {tier: ci}
+ingestService:
+  enabled: true
+  loadBalancerIP: 10.10.10.20
+  loadBalancerSourceRanges: ["192.168.1.50/32"]
+  annotations: {lbipam.cilium.io/ips: 10.10.10.20}
+  labels: {ipPool: private}
 ingress:
   enabled: true
   className: traefik
