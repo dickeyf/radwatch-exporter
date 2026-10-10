@@ -1,6 +1,9 @@
 package gmcmap
 
 import (
+	"bytes"
+	"encoding/json"
+	"log/slog"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -107,12 +110,48 @@ func TestParseErrors(t *testing.T) {
 }
 
 func newTestHandler() (*fakeRecorder, *http.ServeMux) {
+	rec, mux, _ := newTestHandlerWithLog()
+	return rec, mux
+}
+
+func newTestHandlerWithLog() (*fakeRecorder, *http.ServeMux, *bytes.Buffer) {
 	rec := &fakeRecorder{}
-	h := New(config.Default().GMCMap, rec)
+	var buf bytes.Buffer
+	h := New(config.Default().GMCMap, rec, slog.New(slog.NewJSONHandler(&buf, nil)))
 	h.now = func() time.Time { return time.Unix(1_700_000_000, 0) }
 	mux := http.NewServeMux()
 	h.Register(mux)
-	return rec, mux
+	return rec, mux, &buf
+}
+
+func TestHandlerLogsOneLinePerRequest(t *testing.T) {
+	_, mux, buf := newTestHandlerWithLog()
+	for _, target := range []string{
+		"/log2.asp?AID=1&GID=2&CPM=15&uSV=0.075",
+		"/log2.asp?GID=2",
+	} {
+		mux.ServeHTTP(httptest.NewRecorder(), httptest.NewRequestWithContext(t.Context(), http.MethodGet, target, nil))
+	}
+
+	lines := bytes.Split(bytes.TrimSpace(buf.Bytes()), []byte("\n"))
+	if len(lines) != 2 {
+		t.Fatalf("got %d log lines, want 2:\n%s", len(lines), buf.String())
+	}
+	var accepted, rejected map[string]any
+	if err := json.Unmarshal(lines[0], &accepted); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(lines[1], &rejected); err != nil {
+		t.Fatal(err)
+	}
+	if accepted["msg"] != "reading accepted" || accepted["device_id"] != "2" || accepted["cpm"] != 15.0 ||
+		accepted["dose_rate_sieverts_per_hour"] == nil || accepted["acpm"] != nil {
+		t.Errorf("accepted line: %v", accepted)
+	}
+	if rejected["msg"] != "reading rejected" || rejected["level"] != "WARN" ||
+		rejected["status"] != 400.0 || rejected["reason"] != "cpm is required" {
+		t.Errorf("rejected line: %v", rejected)
+	}
 }
 
 func TestHandlerAccepts(t *testing.T) {

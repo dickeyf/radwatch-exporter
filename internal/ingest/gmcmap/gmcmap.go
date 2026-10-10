@@ -5,6 +5,7 @@ package gmcmap
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"math"
 	"net/http"
 	"net/url"
@@ -33,12 +34,14 @@ var idPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,32}$`)
 type Handler struct {
 	cfg config.GMCMap
 	rec ingest.Recorder
+	log *slog.Logger
 	now func() time.Time
 }
 
-// New returns a handler that reports outcomes to rec.
-func New(cfg config.GMCMap, rec ingest.Recorder) *Handler {
-	return &Handler{cfg: cfg, rec: rec, now: time.Now}
+// New returns a handler that reports outcomes to rec and logs one line per
+// request to log.
+func New(cfg config.GMCMap, rec ingest.Recorder, log *slog.Logger) *Handler {
+	return &Handler{cfg: cfg, rec: rec, log: log, now: time.Now}
 }
 
 // Register adds the handler to mux for GET (and so HEAD) on the configured path.
@@ -48,17 +51,18 @@ func (h *Handler) Register(mux *http.ServeMux) {
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.RawQuery) > MaxQueryLen {
-		h.reject(w, http.StatusRequestURITooLong, "query too long")
+		h.reject(w, r, http.StatusRequestURITooLong, "query too long")
 		return
 	}
 	reading, err := Parse(r.URL.RawQuery)
 	if err != nil {
-		h.reject(w, http.StatusBadRequest, err.Error())
+		h.reject(w, r, http.StatusBadRequest, err.Error())
 		return
 	}
 	reading.Time = h.now()
 	h.rec.Record(reading)
 	h.rec.Count(Protocol, ingest.ResultAccepted)
+	h.logAccepted(r, reading)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(h.cfg.ResponseStatus)
@@ -67,9 +71,34 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // reject answers a request that failed validation. Replying with an honest
 // 4xx is a placeholder until AD-13 decides what the device should see.
-func (h *Handler) reject(w http.ResponseWriter, status int, msg string) {
+func (h *Handler) reject(w http.ResponseWriter, r *http.Request, status int, msg string) {
 	h.rec.Count(Protocol, ingest.ResultBadRequest)
+	h.log.LogAttrs(r.Context(), slog.LevelWarn, "reading rejected",
+		slog.String("protocol", Protocol),
+		slog.String("result", ingest.ResultBadRequest),
+		slog.Int("status", status),
+		slog.String("reason", msg),
+		slog.String("remote_addr", r.RemoteAddr),
+	)
 	http.Error(w, msg, status)
+}
+
+func (h *Handler) logAccepted(r *http.Request, reading ingest.Reading) {
+	attrs := []slog.Attr{
+		slog.String("protocol", Protocol),
+		slog.String("result", ingest.ResultAccepted),
+		slog.String("device_id", reading.DeviceID),
+		slog.String("account_id", reading.AccountID),
+		slog.Float64("cpm", reading.CPM),
+	}
+	if reading.ACPM != nil {
+		attrs = append(attrs, slog.Float64("acpm", *reading.ACPM))
+	}
+	if reading.SvPerH != nil {
+		attrs = append(attrs, slog.Float64("dose_rate_sieverts_per_hour", *reading.SvPerH))
+	}
+	attrs = append(attrs, slog.String("remote_addr", r.RemoteAddr))
+	h.log.LogAttrs(r.Context(), slog.LevelInfo, "reading accepted", attrs...)
 }
 
 // Parse validates a GMCmap query string. Parameter names are matched case-

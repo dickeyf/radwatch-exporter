@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/dickeyf/radwatch-exporter/internal/config"
+	"github.com/dickeyf/radwatch-exporter/internal/health"
 	"github.com/dickeyf/radwatch-exporter/internal/ingest/gmcmap"
 	"github.com/dickeyf/radwatch-exporter/internal/metrics"
 )
@@ -46,20 +48,35 @@ func run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	m := metrics.New(cfg.DeviceNames, cfg.StaleAfter)
 	m.InitProtocol(gmcmap.Protocol)
 
+	var checker health.Checker
 	ingestMux := http.NewServeMux()
-	gmcmap.New(cfg.GMCMap, m).Register(ingestMux)
+	checker.Register(ingestMux)
+	gmcmap.New(cfg.GMCMap, m, logger).Register(ingestMux)
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("GET /metrics", m.Handler())
 
 	servers := []*http.Server{newServer(cfg.ListenAddr, ingestMux), newServer(cfg.MetricsAddr, metricsMux)}
-	errc := make(chan error, len(servers))
+	// Bind every listener before serving, so readiness means all ports are up.
+	listeners := make([]net.Listener, 0, len(servers))
 	for _, srv := range servers {
+		ln, err := (&net.ListenConfig{}).Listen(ctx, "tcp", srv.Addr)
+		if err != nil {
+			for _, l := range listeners {
+				_ = l.Close()
+			}
+			return err
+		}
+		listeners = append(listeners, ln)
+	}
+	errc := make(chan error, len(servers))
+	for i, srv := range servers {
 		go func() {
-			if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			if err := srv.Serve(listeners[i]); !errors.Is(err, http.ErrServerClosed) {
 				errc <- err
 			}
 		}()
 	}
+	checker.SetReady(true)
 	logger.Info("started radwatch-exporter",
 		"version", version,
 		"listen_addr", cfg.ListenAddr,
@@ -74,6 +91,7 @@ func run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	case runErr = <-errc:
 	}
 
+	checker.SetReady(false)
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 	for _, srv := range servers {

@@ -16,9 +16,9 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-06 | 1 | Allowlists: GID, AID, source CIDR with trusted-proxy `X-Forwarded-For` handling | IMPL-05, AD-04 | TODO |
 | IMPL-07 | 1 | Metrics registry: gauges, counters per data model in 03-architecture; custom registry + Go/process collectors | IMPL-04, AD-05 | DONE (`internal/metrics`, incl. stale expiry per ADR-008) |
 | IMPL-08 | 1 | Separate metrics HTTP server on `:9090` serving `/metrics` | IMPL-07, AD-03 | DONE (Phase 1 curl exit check passes locally) |
-| IMPL-09 | 1 | `/healthz` (process up) and `/readyz` (listeners up) | IMPL-05 | TODO |
+| IMPL-09 | 1 | `/healthz` (process up) and `/readyz` (listeners up) | IMPL-05 | DONE (`internal/health`, on the ingest port; ready once both listeners are bound, not ready during shutdown) |
 | IMPL-10 | 1 | Configurable response body/status to the device | IMPL-05 | TODO |
-| IMPL-11 | 1 | Structured JSON logging (`log/slog`), one line per accepted/rejected reading | IMPL-05 | TODO |
+| IMPL-11 | 1 | Structured JSON logging (`log/slog`), one line per accepted/rejected reading | IMPL-05 | DONE (`reading accepted` INFO / `reading rejected` WARN, from the gmcmap handler) |
 | IMPL-12 | 1 | Graceful shutdown on SIGTERM; HTTP server timeouts (read/header/write/idle) | IMPL-05 | DONE (`main.go`; SIGTERM path not exercised on Windows yet) |
 | IMPL-13 | 1 | Unit tests: parser, allowlists, metrics values; table-driven with real example query strings | IMPL-05..07 | TODO |
 | IMPL-14 | 1 | README: run locally, curl smoke test, device configuration | IMPL-05 | TODO |
