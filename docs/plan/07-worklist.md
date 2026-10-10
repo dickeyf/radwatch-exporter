@@ -43,7 +43,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-33 | 6 | Optional NetworkPolicy template | IMPL-23 | TODO |
 | IMPL-34 | 6 | Optional forwarding to gmcmap.com/radmon.org (async, timeout, failures don't affect ingest) | PD-05 | TODO |
 | IMPL-35 | 6 | Optional in-app rate limiting | AD-04 | TODO |
-| IMPL-36 | 4 | Publish the chart to GHCR as an OCI artifact (`oci://ghcr.io/dickeyf/charts/radwatch-exporter`) on `v*` tags; chart `version` and `appVersion` checked against the tag | IMPL-28, PD-08 | TODO |
+| IMPL-36 | 4 | Publish the chart to GHCR as an OCI artifact (`oci://ghcr.io/dickeyf/charts/radwatch-exporter`) on `v*` tags; chart `version` and `appVersion` checked against the tag | IMPL-28, PD-08 | DOING |
 
 ---
 

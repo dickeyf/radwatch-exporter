@@ -129,6 +129,10 @@ Rendered only if `serviceMonitor.enabled: true` (AD-07: the cluster has the Prom
 
 `commonLabels` is added to every rendered resource. Together with `podAnnotations`/`podLabels`, `service.annotations`/`service.labels` and `ingress.annotations`, no metadata change should ever need a chart fork. The schema types all of these as string-to-string maps.
 
+## Publishing (IMPL-36)
+
+On a `vX.Y.Z` tag, the CI `publish-chart` job runs after the chart checks and the image push. It requires `appVersion` in `Chart.yaml` to equal `X.Y.Z` (so the default image exists), refuses to overwrite a chart `version` that is already published, then pushes the packaged chart to `oci://ghcr.io/dickeyf/charts/radwatch-exporter`. The chart `version` is independent (PD-08): bump it for every published change to the chart.
+
 ## Chart quality gates
 
 The CI `chart` job (IMPL-28) runs on every push, for the default values and for `ci/full-values.yaml`:

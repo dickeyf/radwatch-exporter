@@ -94,6 +94,9 @@ ingress:
 ```
 
 ```sh
+# From GHCR (released charts)
+helm install radwatch oci://ghcr.io/dickeyf/charts/radwatch-exporter --version <chart version>   -n radwatch --create-namespace -f my-values.yaml
+# Or from a checkout
 helm install radwatch deploy/helm/radwatch-exporter -n radwatch --create-namespace -f my-values.yaml
 ```
 
@@ -130,6 +133,13 @@ device_names:
 gmcmap:
   allowed_gids: ["0034021"]
 ```
+
+## Releasing
+
+1. In `deploy/helm/radwatch-exporter/Chart.yaml`, set `appVersion` to the new release (`X.Y.Z`) and bump the chart `version`.
+2. Commit, then tag and push: `git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`.
+
+CI then publishes the image (`X.Y.Z`, `X.Y`, `sha-<short>`) and the chart to GHCR. It fails if `appVersion` doesn't match the tag or the chart version already exists.
 
 ## Licence
 

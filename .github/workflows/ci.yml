@@ -146,3 +146,42 @@ jobs:
             rendered/default.yaml rendered/full.yaml
       - name: Policy check (kube-linter)
         run: kube-linter lint --config "$CHART/.kube-linter.yaml" rendered/
+
+  publish-chart:
+    # Release tags only (IMPL-36). The image for appVersion is pushed by "publish" first.
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [chart, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      CHART: deploy/helm/radwatch-exporter
+      REGISTRY: oci://ghcr.io/${{ github.repository_owner }}/charts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v5
+        with:
+          version: v3.22.0
+      - name: Check versions against the tag (PD-08)
+        id: versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          app=$(yq '.appVersion' "$CHART/Chart.yaml")
+          chart=$(yq '.version' "$CHART/Chart.yaml")
+          echo "tag=$tag appVersion=$app version=$chart"
+          if [ "$app" != "$tag" ]; then
+            echo "::error::Chart appVersion ($app) must equal the release tag ($tag)"; exit 1
+          fi
+          echo "chart=$chart" >> "$GITHUB_OUTPUT"
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Refuse to overwrite a published chart version
+        run: |
+          if helm show chart "$REGISTRY/radwatch-exporter" --version "${{ steps.versions.outputs.chart }}" >/dev/null 2>&1; then
+            echo "::error::Chart version ${{ steps.versions.outputs.chart }} is already published; bump version in Chart.yaml"; exit 1
+          fi
+      - name: Package and push
+        run: |
+          helm package "$CHART" -d dist
+          helm push "dist/radwatch-exporter-${{ steps.versions.outputs.chart }}.tgz" "$REGISTRY"
