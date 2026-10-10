@@ -6,7 +6,7 @@
 - Runs as a non-root user (numeric UID so `runAsNonRoot` can be verified).
 - Works with a **read-only root filesystem**: the service writes nothing to disk. Logs go to stdout.
 - No shell, no package manager in the final image.
-- Listens on unprivileged ports only (8080, 9090), so no `NET_BIND_SERVICE` capability is needed. Port 80/443 is the Ingress's job.
+- Listens on unprivileged ports only (8080, 9090), so no `NET_BIND_SERVICE` capability is needed. Port 80 is the Service's job (`ingestService` maps 80 → 8080) or the Ingress's.
 
 ## Dockerfile
 

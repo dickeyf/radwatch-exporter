@@ -11,6 +11,7 @@ deploy/helm/radwatch-exporter/
 │   ├── _helpers.tpl
 │   ├── deployment.yaml
 │   ├── service.yaml
+│   ├── service-ingest.yaml   # optional, ingestService.enabled (IMPL-38)
 │   ├── ingress.yaml
 │   ├── configmap.yaml
 │   ├── secret.yaml           # not yet (IMPL-26)

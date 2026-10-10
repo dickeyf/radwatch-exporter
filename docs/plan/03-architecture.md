@@ -3,15 +3,17 @@
 ## Component view
 
 ```
-GMC-500+ (WiFi)
-   │  HTTP GET /<ingest-path>?AID=..&GID=..&CPM=..&ACPM=..&uSV=..
+GMC-500+ (WiFi, configured with an IP: it cannot resolve names, Q-08)
+   │  HTTP GET http://<ingest IP>/<ingest-path>?AID=..&GID=..&CPM=..&ACPM=..&uSV=..
    ▼
-Ingress controller (LAN IP, :80 / :443)
-   │  only the ingest path is routed
+Service radwatch-exporter-ingest (LoadBalancer, fixed private IP, :80 only,
+   │  externalTrafficPolicy: Local so the counter's address survives; ADR-009, IMPL-38)
+   │
+   │        other clients (optional) → Ingress controller → only the ingest path
    ▼
 Service radwatch-exporter (ClusterIP)
    ├─ port "http"    → container :8080  (ingest, /healthz, /readyz)
-   └─ port "metrics" → container :9090  (/metrics)
+   └─ port "metrics" → container :9090  (/metrics, in-cluster only)
    ▼
 Pod: radwatch-exporter (single static Go binary)
    ├─ ingest: source-IP check → validate → GID/AID check → update gauges (ADR-009)
@@ -84,7 +86,7 @@ No persistence; on restart the gauges are empty until the next report (≤ 2 min
 
 **Status:** Accepted (AD-03, confirmed 2026-10-09).
 
-Ingest on `:8080`, metrics on `:9090`, both exposed by the ClusterIP Service. Only the ingest port is routed by the Ingress, so `/metrics` is never reachable from outside the cluster even if the Ingress is misconfigured on paths. Alternative: one port, path-based Ingress rules — simpler but easier to expose `/metrics` by accident.
+Ingest on `:8080`, metrics on `:9090`, both exposed by the ClusterIP Service. Only the ingest port is routed by the Ingress or exposed by the ingest LoadBalancer Service (`ingestService`); neither ever carries the metrics port, so `/metrics` is never reachable from outside the cluster even if the Ingress is misconfigured on paths. Alternative: one port, path-based Ingress rules — simpler but easier to expose `/metrics` by accident.
 
 ### ADR-005 — Standard library `net/http`, no web framework
 
@@ -126,7 +128,7 @@ In-app checks, in order, each skipped when its list is empty:
 
 Rejections answer honestly: 403 for allowlists, 400/414 for bad input. They are counted as `rejected_allowlist` or `bad_request` and logged at WARN with `client_ip` and `reason`. The resolved `client_ip` is logged for accepted readings too.
 
-Outside the app, the Ingress (strict path, LAN-only exposure, optional controller IP allowlist) and a NetworkPolicy add the outer layers listed in 06. Path-as-secret waits for Q-04. AD-13 is revisited if Phase 2 shows the device misbehaves on non-200 replies (Q-05); the reply would then become configurable.
+Outside the app, the private LoadBalancer IP of the ingest Service (with the router's firewall rule and optionally `loadBalancerSourceRanges`), or the Ingress for other clients (strict path, LAN-only exposure), and a NetworkPolicy add the outer layers listed in 06. Path-as-secret waits for Q-04. AD-13 is revisited if Phase 2 shows the device misbehaves on non-200 replies (Q-05); the reply would then become configurable.
 
 ### ADR-010 — Container base image: distroless static, nonroot
 

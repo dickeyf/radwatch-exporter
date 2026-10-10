@@ -47,7 +47,7 @@ Connection: close
 
 **WiFi.** The counter would not join the main home network (2.4/5/6 GHz, single name) but joined the IoT network. Its WiFi stack is 2.4 GHz-only and old; WPA3/transition mode, required PMF, 802.11r, band steering and WiFi 6/6E beacon extras commonly break such devices. Use a 2.4 GHz WPA2-only network with PMF optional or off, no fast roaming and no band steering.
 
-**Consequences.** The Ingress must serve plain HTTP on port 80 for the ingest path with no HTTPS redirect. The device must be given an IP, so it cannot use a host-based Ingress rule: it reaches the exporter through a dedicated LoadBalancer Service (`ingestService`, PD-06). The stale timeout (5 min) survives one missed upload; the silence alert threshold should be 5–10 min (PD-07).
+**Consequences.** The device must be given an IP, so it cannot use a host-based Ingress rule: it reaches the exporter through a dedicated LoadBalancer Service (`ingestService`, PD-06). The stale timeout (5 min) survives one missed upload; the silence alert threshold should be 5–10 min (PD-07). If an optional Ingress is also used for other clients, it must serve plain HTTP on port 80 for the ingest path with no HTTPS redirect.
 
 ## Threat model (short)
 
@@ -60,16 +60,16 @@ Connection: close
 
 Layered options, roughly from cheapest to strongest. Choosing the combination is AD-04.
 
-1. **Don't expose it to the Internet.** Ingress bound to a LAN-only IP/LoadBalancer. (PD-06)
-2. **Strict routing.** Only the exact ingest path, GET only; everything else 404 at the Ingress.
+1. **Don't expose it to the Internet.** The ingest Service gets a private LoadBalancer IP, reachable only from the LAN (PD-06); an optional Ingress is LAN-only too.
+2. **Strict routing.** Only the exact ingest path, GET only; everything else 404 (in the app on the ingest Service; at the Ingress for the optional name-based path).
 3. **Source-IP allowlist.** Give the counter a DHCP reservation and allow only that IP.
-   - At the Ingress (controller annotation), or
-   - In the app (`RADWATCH_ALLOWED_CIDRS`). The app sees the Ingress controller's IP, so it must read `X-Forwarded-For` **only** from trusted proxy CIDRs (`RADWATCH_TRUSTED_PROXIES`). Also requires the Ingress Service to preserve client IPs (e.g. `externalTrafficPolicy: Local`).
+   - In the app (`RADWATCH_ALLOWED_CIDRS`). Through the ingest Service with `externalTrafficPolicy: Local`, the app sees the counter's own address. Through an Ingress, the app sees the controller's IP and must read `X-Forwarded-For` **only** from trusted proxy CIDRs (`RADWATCH_TRUSTED_PROXIES`), and the controller's Service must preserve client IPs.
+   - At the load balancer (`ingestService.loadBalancerSourceRanges`) or the Ingress (controller annotation).
 4. **ID allowlist.** Accept only known GID (and AID). Weak on its own (IDs are visible on the wire) but prevents unbounded label creation.
 5. **Path-as-secret.** If Q-04 allows it, use a long random URL path (e.g. `/ingest/9f3c…`) stored in the Secret. Clear-text over HTTP, so only as strong as LAN confidentiality.
 6. **Input validation.** Numeric parse with sane bounds (e.g. CPM 0–1,000,000, µSv/h 0–10,000), reject otherwise; cap query-string length.
 7. **Rate limiting.** Per source IP, e.g. a few requests per minute; at the Ingress or in-app.
-8. **NetworkPolicy.** Only the Ingress controller namespace may reach port `http`; only the scraper may reach port `metrics`.
+8. **NetworkPolicy.** Port `http` only from the counters' CIDRs (traffic via the ingest Service arrives with their addresses) and/or the Ingress controller; port `metrics` only from the scraper.
 
 Decided in ADR-009 (AD-04): 3 (in the app, with trusted-proxy handling) + 4 + 6 are implemented; 1 and 2 come with the chart (Phase 4); 8 is IMPL-33 (Phase 6); 5 waits for Q-04; 7 is IMPL-35.
 

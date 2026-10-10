@@ -40,7 +40,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-30 | 5 | Scrape config (ServiceMonitor template or Alloy snippet) | AD-07 | DONE (optional `servicemonitor.yaml`, `serviceMonitor.*` values) |
 | IMPL-31 | 5 | Grafana dashboard JSON: CPM and dose rate on log scales (spikes from test sources must not flatten background). Reference lines on the dose-rate panel: the site's normal background; the public limit of 1 mSv/year as an hourly rate (~0.11 µSv/h above background); and "3.6 roentgen: not great, not terrible" at 0.036 Sv/h (~36 mSv/h; the counter saturates long before) | IMPL-30 | TODO |
 | IMPL-32 | 5 | Alert rules: device silent, dose-rate threshold | IMPL-30, PD-07 | TODO |
-| IMPL-33 | 6 | Optional NetworkPolicy template | IMPL-23 | TODO |
+| IMPL-33 | 6 | Optional NetworkPolicy template: ingest port only from the counters' CIDRs (ingestService) and/or the ingress controller; metrics port only from the scraper | IMPL-23 | TODO |
 | IMPL-34 | 6 | Optional forwarding to gmcmap.com/radmon.org (async, timeout, failures don't affect ingest) | PD-05 | TODO |
 | IMPL-35 | 6 | Optional in-app rate limiting | AD-04 | TODO |
 | IMPL-36 | 4 | Publish the chart to GHCR as an OCI artifact (`oci://ghcr.io/dickeyf/charts/radwatch-exporter`) on `v*` tags; chart `version` and `appVersion` checked against the tag | IMPL-28, PD-08 | DONE (CI `publish-chart`; first release chart 0.1.1 / app 0.1.1, public) |

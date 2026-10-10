@@ -49,7 +49,7 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 
 **Goal:** deploy into the cluster.
 
-- Chart with Deployment, ClusterIP Service (ingest + metrics ports), Ingress, ConfigMap, optional ServiceMonitor.
+- Chart with Deployment, ClusterIP Service (ingest + metrics ports), optional ingest LoadBalancer Service (counters configured by IP), optional Ingress, ConfigMap, optional ServiceMonitor.
 - Chart published to GHCR as an OCI artifact on release tags (IMPL-36).
 - TLS secret referenced by name only (created elsewhere in the same namespace).
 - Hardened pod security context.
