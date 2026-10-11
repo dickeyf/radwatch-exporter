@@ -31,3 +31,6 @@ serviceMonitor:
   enabled: true
   interval: 30s
   labels: {release: prometheus}
+grafanaDashboard:
+  enabled: true
+  annotations: {grafana_folder: Radiation}

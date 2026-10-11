@@ -16,7 +16,9 @@ deploy/helm/radwatch-exporter/
 │   ├── configmap.yaml
 │   ├── secret.yaml           # not yet (IMPL-26)
 │   ├── servicemonitor.yaml   # optional, serviceMonitor.enabled (AD-07)
+│   ├── dashboard-configmap.yaml # optional, grafanaDashboard.enabled (IMPL-31)
 │   └── NOTES.txt             # prints the Website / URL to enter on the counter
+├── dashboards/radwatch.json  # the Grafana dashboard
 ├── ci/full-values.yaml       # every optional value turned on, for CI (placeholders only)
 └── .kube-linter.yaml         # policy for the rendered manifests
 ```
@@ -133,6 +135,10 @@ Rendered only if `serviceMonitor.enabled: true` (AD-07: the cluster has the Prom
 ### Metadata on every resource
 
 `commonLabels` is added to every rendered resource. Together with `podAnnotations`/`podLabels`, `service.annotations`/`service.labels` and `ingress.annotations`, no metadata change should ever need a chart fork. The schema types all of these as string-to-string maps.
+
+### Grafana dashboard (optional, IMPL-31)
+
+`grafanaDashboard.enabled: true` renders `dashboards/radwatch.json` into a ConfigMap labelled for the Grafana sidecar (`grafanaDashboard.labels`, default `grafana_dashboard: "1"`, kube-prometheus-stack's default). `namespace` puts it elsewhere if the sidecar only watches one namespace; `annotations` can set a folder. The dashboard has a data-source and a device selector; dose-rate panels use log scales and the reference lines from [reference-dose-rates.md](../reference-dose-rates.md).
 
 ## Publishing (IMPL-36)
 

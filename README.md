@@ -113,6 +113,10 @@ helm install radwatch deploy/helm/radwatch-exporter -n radwatch --create-namespa
 
 Counters only speak plain HTTP on port 80: if you route them through an Ingress, serve the path on a plain-HTTP entrypoint without an HTTPS redirect. `/metrics` stays in the cluster on Service port 9090; `ingestService` never exposes it.
 
+### Grafana dashboard
+
+`grafanaDashboard.enabled: true` ships the dashboard as a ConfigMap for the Grafana sidecar (label `grafana_dashboard: "1"` by default). Or import [dashboards/radwatch.json](deploy/helm/radwatch-exporter/dashboards/radwatch.json) by hand. It shows the current dose rate, CPM, 24 h dose and time since the last upload, then log-scale dose-rate and CPM history with reference lines (background, 1 mSv/year, flights, occupational limit, and a perspective panel up to Chernobyl levels, see [reference dose rates](docs/reference-dose-rates.md)).
+
 ## Configuration
 
 Defaults, then an optional YAML file (`RADWATCH_CONFIG_FILE`), then env vars; a set env var always wins. Invalid config stops the process at startup.

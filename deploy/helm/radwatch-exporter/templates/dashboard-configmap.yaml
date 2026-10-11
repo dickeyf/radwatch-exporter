@@ -1,0 +1,24 @@
+{{- if .Values.grafanaDashboard.enabled -}}
+# Grafana dashboard (IMPL-31), loaded by the Grafana sidecar that watches for
+# ConfigMaps carrying grafanaDashboard.labels (kube-prometheus-stack default:
+# grafana_dashboard: "1").
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "radwatch-exporter.fullname" . }}-dashboard
+  {{- with .Values.grafanaDashboard.namespace }}
+  namespace: {{ . }}
+  {{- end }}
+  labels:
+    {{- include "radwatch-exporter.labels" . | nindent 4 }}
+    {{- with .Values.grafanaDashboard.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.grafanaDashboard.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  radwatch.json: |-
+{{ .Files.Get "dashboards/radwatch.json" | indent 4 }}
+{{- end }}

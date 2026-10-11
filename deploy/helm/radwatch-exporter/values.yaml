@@ -100,6 +100,18 @@ serviceMonitor:
   relabelings: []
   metricRelabelings: []
 
+# Grafana dashboard as a ConfigMap for the Grafana sidecar (IMPL-31). The JSON
+# is dashboards/radwatch.json in the chart.
+grafanaDashboard:
+  enabled: false
+  # Empty: the release namespace. Set it if your sidecar only watches one namespace.
+  namespace: ""
+  # The label your Grafana sidecar selects on (kube-prometheus-stack default).
+  labels:
+    grafana_dashboard: "1"
+  # e.g. grafana_folder: Radiation (sidecar folder annotation, if configured)
+  annotations: {}
+
 resources:
   requests:
     cpu: 10m
