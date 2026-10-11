@@ -128,13 +128,27 @@ In-app checks, in order, each skipped when its list is empty:
 
 Rejections answer honestly: 403 for allowlists, 400/414 for bad input. They are counted as `rejected_allowlist` or `bad_request` and logged at WARN with `client_ip` and `reason`. The resolved `client_ip` is logged for accepted readings too.
 
-Outside the app, the private LoadBalancer IP of the ingest Service (with the router's firewall rule and optionally `loadBalancerSourceRanges`), or the Ingress for other clients (strict path, LAN-only exposure), and a NetworkPolicy add the outer layers listed in 06. Path-as-secret waits for Q-04. AD-13 is revisited if Phase 2 shows the device misbehaves on non-200 replies (Q-05); the reply would then become configurable.
+Outside the app, the private LoadBalancer IP of the ingest Service (with the router's firewall rule and optionally `loadBalancerSourceRanges`), or the Ingress for other clients (strict path, LAN-only exposure), and the optional NetworkPolicy (ADR-011) add the outer layers listed in 06. Path-as-secret waits for Q-04. AD-13 is revisited if Phase 2 shows the device misbehaves on non-200 replies (Q-05); the reply would then become configurable.
 
 ### ADR-010 — Container base image: distroless static, nonroot
 
 **Status:** Accepted (AD-08, confirmed 2026-10-09).
 
 Final stage `gcr.io/distroless/static-debian12:nonroot`: CA certificates (for future HTTPS forwarding, IMPL-34), a `nonroot` user with UID/GID 65532, tzdata, no shell or package manager. `scratch` would be a few hundred KB smaller but needs CA certs and a passwd entry copied in by hand; Chainguard's static image is equivalent but only `latest` is free to pull by tag. Build stage `golang:<Go version>-bookworm`. Both are pinned by digest and updated by Renovate (PD-09). The build cross-compiles on the build platform, so arm64 images (PD-04) need no QEMU.
+
+### ADR-011 — No authentication on `/metrics`; optional NetworkPolicy
+
+**Status:** Accepted (AD-10, 2026-10-11).
+
+`/metrics` gets no basic auth or TLS. It listens on its own port (ADR-004), which neither the ingest Service nor the Ingress ever carries, so it is only reachable inside the cluster, and it exposes nothing secret (readings, request counts, Go runtime stats). `exporter-toolkit` would add a dependency, a credential to rotate, and matching configuration in every scraper, for little gain.
+
+The chart instead ships an optional NetworkPolicy (`networkPolicy.enabled`, IMPL-33) for clusters whose CNI enforces it:
+
+- **Ingest port:** from `config.allowedCIDRs` as `ipBlock`s (a bare IP becomes /32 or /128), plus extra peers such as the ingress controller (`ingestFrom`). Through the ingest Service with `externalTrafficPolicy: Local` the counter keeps its address, so the same list works at both layers. With neither, the port stays open.
+- **Metrics port:** from `metricsFrom` peers (e.g. the `monitoring` namespace); empty means any pod in the cluster, never outside.
+- **Egress:** denied unless listed (`egress`). The exporter makes no outbound calls; forwarding (IMPL-34) will need DNS and its target here.
+
+Off by default: a wrong peer silently breaks scraping or ingest, and kubelet probe handling differs by CNI. Revisit if `/metrics` ever has to leave the cluster.
 
 ## Decisions still open
 

@@ -140,6 +140,29 @@ grafanaDashboard:
   # e.g. grafana_folder: Radiation (sidecar folder annotation, if configured)
   annotations: {}
 
+# NetworkPolicy for the exporter pod (IMPL-33, ADR-011). Needs a CNI that
+# enforces NetworkPolicy (Cilium, Calico...). Kubelet probes come from the node;
+# most CNIs allow them, check yours if the pod stops being ready.
+networkPolicy:
+  enabled: false
+  # Ingest port: allow config.allowedCIDRs (a bare IP becomes /32 or /128).
+  # Traffic through ingestService with externalTrafficPolicy: Local keeps the
+  # counter's address, so this matches it.
+  ingestFromAllowedCIDRs: true
+  # Extra NetworkPolicyPeers for the ingest port, e.g. the ingress controller:
+  # - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}
+  #   podSelector: {matchLabels: {app.kubernetes.io/name: traefik}}
+  # With no CIDRs and no peers, the ingest port is open to all.
+  ingestFrom: []
+  # NetworkPolicyPeers allowed to scrape the metrics port, e.g.
+  # - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: monitoring}}
+  # Empty: any pod in the cluster (never outside it).
+  metricsFrom: []
+  # Egress rules. Empty denies all egress: the exporter makes no outbound calls
+  # (forwarding, IMPL-34, will need DNS and the forward target here).
+  egress: []
+  annotations: {}
+
 resources:
   requests:
     cpu: 10m

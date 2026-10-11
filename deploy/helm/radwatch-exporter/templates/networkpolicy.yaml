@@ -1,0 +1,50 @@
+{{- if .Values.networkPolicy.enabled -}}
+{{- $np := .Values.networkPolicy -}}
+{{- $cidrs := ternary .Values.config.allowedCIDRs (list) $np.ingestFromAllowedCIDRs -}}
+# NetworkPolicy (IMPL-33, AD-10, ADR-011): the ingest port only from the
+# counters and listed peers, the metrics port only from the scrapers, no egress
+# unless listed.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "radwatch-exporter.fullname" . }}
+  labels:
+    {{- include "radwatch-exporter.labels" . | nindent 4 }}
+  {{- with $np.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "radwatch-exporter.selectorLabels" . | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - ports:
+        - port: http
+          protocol: TCP
+      {{- if or $cidrs $np.ingestFrom }}
+      from:
+        {{- range $cidrs }}
+        - ipBlock:
+            cidr: {{ if contains "/" . }}{{ . }}{{ else if contains ":" . }}{{ . }}/128{{ else }}{{ . }}/32{{ end }}
+        {{- end }}
+        {{- with $np.ingestFrom }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+    - ports:
+        - port: metrics
+          protocol: TCP
+      from:
+        {{- with $np.metricsFrom }}
+        {{- toYaml . | nindent 8 }}
+        {{- else }}
+        - namespaceSelector: {}
+        {{- end }}
+  egress:
+    {{- with $np.egress }}
+    {{- toYaml . | nindent 4 }}
+    {{- else }} []
+    {{- end }}
+{{- end }}

@@ -18,13 +18,14 @@ deploy/helm/radwatch-exporter/
 │   ├── servicemonitor.yaml   # optional, serviceMonitor.enabled (AD-07)
 │   ├── dashboard-configmap.yaml # optional, grafanaDashboard.enabled (IMPL-31)
 │   ├── prometheusrule.yaml   # optional, prometheusRule.enabled (IMPL-32)
+│   ├── networkpolicy.yaml    # optional, networkPolicy.enabled (IMPL-33)
 │   └── NOTES.txt             # prints the Website / URL to enter on the counter
 ├── dashboards/radwatch.json  # the Grafana dashboard
 ├── ci/full-values.yaml       # every optional value turned on, for CI (placeholders only)
 └── .kube-linter.yaml         # policy for the rendered manifests
 ```
 
-Implemented in IMPL-21–25, 27, 30–32 and 38; `values.yaml` documents every value. The chart's `appVersion` is the image tag used when `image.tag` is empty, so a `v<appVersion>` release must exist on GHCR (or set `image.tag` to an `edge`/`sha-` tag).
+Implemented in IMPL-21–25, 27, 30–33 and 38; `values.yaml` documents every value. The chart's `appVersion` is the image tag used when `image.tag` is empty, so a `v<appVersion>` release must exist on GHCR (or set `image.tag` to an `edge`/`sha-` tag).
 
 Values map to the config with `config.*` (e.g. `config.gmcmap.allowedGIDs`), rendered as `RADWATCH_*` env vars in the ConfigMap. Ports are fixed inside the container (8080, 9090); `service.port` and `service.metricsPort` set the Service side. Validation: `helm lint` plus the schema; a missing `ingress.host` (or `tls.secretName` with TLS on) fails the render.
 
@@ -149,6 +150,19 @@ Rendered only if `serviceMonitor.enabled: true` (AD-07: the cluster has the Prom
 | `RadwatchDoseRateCritical` | dose rate > `doseRate.critical.sievertsPerHour` (1e-5 Sv/h = 10 µSv/h) for 5 min | critical |
 
 Every alert also carries `alertLabels` (default `service: radwatch`) for Alertmanager routing. Deliberate tests with a source will fire the dose-rate alerts: silence them in Alertmanager for the duration.
+
+### NetworkPolicy (optional, IMPL-33)
+
+`networkPolicy.enabled: true` renders a NetworkPolicy for the pod (ADR-011), for CNIs that enforce it:
+
+| Value | Default | Effect |
+|-------|---------|--------|
+| `ingestFromAllowedCIDRs` | `true` | `config.allowedCIDRs` become `ipBlock` peers of the ingest port (bare IPs get /32 or /128) |
+| `ingestFrom` | `[]` | Extra peers for the ingest port, e.g. the ingress controller's pods. No CIDRs and no peers: open |
+| `metricsFrom` | `[]` | Peers allowed to scrape; empty = any pod in the cluster |
+| `egress` | `[]` | Egress rules; empty denies all (the exporter makes no outbound calls) |
+
+Kubelet probes come from the node; Cilium and Calico allow them by default. With an Ingress, add the controller to `ingestFrom`, or its traffic is dropped.
 
 ### Grafana dashboard (optional, IMPL-31)
 

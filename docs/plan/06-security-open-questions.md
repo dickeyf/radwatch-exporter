@@ -71,10 +71,10 @@ Layered options, roughly from cheapest to strongest. Choosing the combination is
 7. **Rate limiting.** Per source IP, e.g. a few requests per minute; at the Ingress or in-app.
 8. **NetworkPolicy.** Port `http` only from the counters' CIDRs (traffic via the ingest Service arrives with their addresses) and/or the Ingress controller; port `metrics` only from the scraper.
 
-Decided in ADR-009 (AD-04): 3 (in the app, with trusted-proxy handling) + 4 + 6 are implemented; 1 and 2 come with the chart (Phase 4); 8 is IMPL-33 (Phase 6); 5 waits for Q-04; 7 is IMPL-35.
+Decided in ADR-009 (AD-04): 3 (in the app, with trusted-proxy handling) + 4 + 6 are implemented; 1 and 2 come with the chart (Phase 4); 8 is the optional chart NetworkPolicy (IMPL-33, ADR-011); 5 waits for Q-04; 7 is IMPL-35.
 
 ## TLS notes
 
 - The chart supports TLS on the Ingress using an **existing** TLS Secret in the release namespace (created by External Secrets, cert-manager, or by hand). The chart only references it by name.
 - If the device is HTTP-only (Q-01), TLS still protects other clients (e.g. you testing with curl), but the device's own traffic stays in clear text. HTTP→HTTPS redirect must be off for the ingest path.
-- `/metrics` stays in-cluster on its own port; TLS/basic-auth on it (via `exporter-toolkit`) is optional and probably unnecessary (AD-10).
+- `/metrics` stays in-cluster on its own port; no TLS or basic auth on it (AD-10, ADR-011); the optional NetworkPolicy limits who can scrape it.

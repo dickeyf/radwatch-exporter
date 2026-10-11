@@ -3,7 +3,7 @@ name: radwatch-exporter
 description: Receives readings pushed by radiation counters (GQ GMCmap protocol) and exposes them as Prometheus metrics.
 type: application
 # Chart version, independent of the app (PD-08).
-version: 0.4.0
+version: 0.5.0
 # Image tag used when image.tag is empty.
 appVersion: "0.1.4"
 home: https://github.com/dickeyf/radwatch-exporter

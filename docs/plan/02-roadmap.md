@@ -71,7 +71,7 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 
 - Forward readings to gmcmap.com / radmon.org (PD-05).
 - Rate limiting per source IP.
-- NetworkPolicy.
+- NetworkPolicy (IMPL-33, chart 0.5.0).
 - Chart release automation beyond IMPL-36 (chart versioned separately, `appVersion` = image, PD-08).
 - Optional Secret (IMPL-26).
 
