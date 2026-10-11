@@ -47,12 +47,6 @@
       "matchUpdateTypes": ["major", "minor", "patch"],
       "groupName": "Go toolchain",
       "automerge": false
-    },
-    {
-      "description": "Hold Helm 4: CLI and OCI push changes need a separate test of publish-chart first",
-      "matchPackageNames": ["helm"],
-      "matchUpdateTypes": ["major"],
-      "enabled": false
     }
   ]
 }

@@ -9,5 +9,7 @@ appVersion: "0.1.4"
 home: https://github.com/dickeyf/radwatch-exporter
 sources:
   - https://github.com/dickeyf/radwatch-exporter
-license: Apache-2.0
+annotations:
+  # Not a Chart.yaml field; Helm 4 lint --strict rejects unknown fields.
+  artifacthub.io/license: Apache-2.0
 keywords: [prometheus, exporter, geiger, radiation, gmcmap]
