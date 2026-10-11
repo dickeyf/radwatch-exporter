@@ -24,7 +24,7 @@ deploy/helm/radwatch-exporter/
 └── .kube-linter.yaml         # policy for the rendered manifests
 ```
 
-Implemented in IMPL-21–25 and 27; `values.yaml` documents every value. The chart's `appVersion` is the image tag used when `image.tag` is empty, so a `v<appVersion>` release must exist on GHCR (or set `image.tag` to an `edge`/`sha-` tag).
+Implemented in IMPL-21–25, 27, 30–32 and 38; `values.yaml` documents every value. The chart's `appVersion` is the image tag used when `image.tag` is empty, so a `v<appVersion>` release must exist on GHCR (or set `image.tag` to an `edge`/`sha-` tag).
 
 Values map to the config with `config.*` (e.g. `config.gmcmap.allowedGIDs`), rendered as `RADWATCH_*` env vars in the ConfigMap. Ports are fixed inside the container (8080, 9090); `service.port` and `service.metricsPort` set the Service side. Validation: `helm lint` plus the schema; a missing `ingress.host` (or `tls.secretName` with TLS on) fails the render.
 
@@ -163,5 +163,5 @@ On a `vX.Y.Z` tag, the CI `publish-chart` job runs after the chart checks and th
 The CI `chart` job (IMPL-28) runs on every push, for the default values and for `ci/full-values.yaml`:
 
 - `helm lint --strict`, which also enforces `values.schema.json`.
-- `helm template | kubeconform -strict`, with the datreeio CRDs catalog for the ServiceMonitor.
-- `kube-linter` with all built-in checks (non-root, read-only rootfs, dropped caps, probes, resources...). Exclusions are listed with their reason in `.kube-linter.yaml` (single replica by design, no CPU limit, no ServiceAccount).
+- `helm template | kubeconform -strict`, with the datreeio CRDs catalog for the ServiceMonitor and PrometheusRule.
+- `kube-linter` with its default checks plus explicit security checks (non-root, read-only rootfs, privilege escalation, probe ports, memory requests...). Exclusions are listed with their reason in `.kube-linter.yaml` (single replica by design, no CPU limit, no ServiceAccount).

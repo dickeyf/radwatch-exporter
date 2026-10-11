@@ -114,7 +114,7 @@ Units: Prometheus base units, no SI prefixes. The device reports µSv/h; the exp
 
 **Status:** Accepted (AD-11, confirmed 2026-10-09).
 
-When a device has not reported for `stale_after` (`RADWATCH_STALE_AFTER`, default `5m`, `0` disables), the exporter drops its value gauges (`radwatch_cpm`, `radwatch_acpm`, `radwatch_dose_rate_sieverts_per_hour`) at the next scrape. `radwatch_last_report_timestamp_seconds` and `radwatch_reports_total` are kept. Dashboards then show a gap instead of a flat, stale line, and the "device silent" alert stays a simple `time() - radwatch_last_report_timestamp_seconds > 300` with no `absent()`. The next accepted reading brings the gauges back. Alternatives rejected: keeping the last value forever (misleading graphs), dropping every series (alerting needs `absent()` per device).
+When a device has not reported for `stale_after` (`RADWATCH_STALE_AFTER`, default `5m`, `0` disables), the exporter drops its value gauges (`radwatch_cpm`, `radwatch_acpm`, `radwatch_dose_rate_sieverts_per_hour`) at the next scrape. `radwatch_last_report_timestamp_seconds` and `radwatch_reports_total` are kept. Dashboards then show a gap instead of a flat, stale line, and the "device silent" alert stays a simple `time() - radwatch_last_report_timestamp_seconds > 600` (PD-07) with no `absent()`. The next accepted reading brings the gauges back. Alternatives rejected: keeping the last value forever (misleading graphs), dropping every series (alerting needs `absent()` per device).
 
 ### ADR-009 — Layered ingest restrictions, honest 4xx on rejection
 

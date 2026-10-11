@@ -47,7 +47,7 @@ Connection: close
 
 **WiFi.** The counter would not join the main home network (2.4/5/6 GHz, single name) but joined the IoT network. Its WiFi stack is 2.4 GHz-only and old; WPA3/transition mode, required PMF, 802.11r, band steering and WiFi 6/6E beacon extras commonly break such devices. Use a 2.4 GHz WPA2-only network with PMF optional or off, no fast roaming and no band steering.
 
-**Consequences.** The device must be given an IP, so it cannot use a host-based Ingress rule: it reaches the exporter through a dedicated LoadBalancer Service (`ingestService`, PD-06). The stale timeout (5 min) survives several missed uploads at 1–2 minute intervals; the silence alert threshold should be 5–10 min (PD-07). If an optional Ingress is also used for other clients, it must serve plain HTTP on port 80 for the ingest path with no HTTPS redirect.
+**Consequences.** The device must be given an IP, so it cannot use a host-based Ingress rule: it reaches the exporter through a dedicated LoadBalancer Service (`ingestService`, PD-06). The stale timeout (5 min) survives several missed uploads at 1–2 minute intervals; the silence alert threshold is 10 min (PD-07). If an optional Ingress is also used for other clients, it must serve plain HTTP on port 80 for the ingest path with no HTTPS redirect.
 
 ## Threat model (short)
 

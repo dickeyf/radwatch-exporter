@@ -12,7 +12,7 @@ A lightweight service that receives readings pushed by a GQ GMC-500+ Geiger coun
 | [02-roadmap.md](02-roadmap.md) | Phased roadmap with exit criteria |
 | [03-architecture.md](03-architecture.md) | Architecture overview and initial decisions (ADRs) |
 | [04-container.md](04-container.md) | Container image plan (minimal, non-root, read-only rootfs) |
-| [05-helm-chart.md](05-helm-chart.md) | Helm chart (Deployment, Services incl. the optional ingest LoadBalancer, optional Ingress and ServiceMonitor, ConfigMap) |
+| [05-helm-chart.md](05-helm-chart.md) | Helm chart (Deployment, Services incl. the optional ingest LoadBalancer, optional Ingress, ServiceMonitor, Grafana dashboard and alert rules, ConfigMap) |
 | [06-security-open-questions.md](06-security-open-questions.md) | Endpoint restriction, TLS, auth, open questions |
 | [07-worklist.md](07-worklist.md) | Work items: implementation, architectural decisions, project decisions |
 

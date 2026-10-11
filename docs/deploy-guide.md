@@ -29,7 +29,7 @@ An Ingress (with external-dns) is still useful for other clients that do resolve
 
 - Flux (source and Helm controllers).
 - A LoadBalancer implementation with a private address pool reachable from the counter's VLAN. Reference: Cilium LB-IPAM pools plus BGP advertisement of LoadBalancer IPs to pfSense.
-- Prometheus Operator CRDs, for the ServiceMonitor.
+- Prometheus Operator CRDs, for the ServiceMonitor and the PrometheusRule; an Alertmanager route that delivers the alerts (the reference uses the default route, by mail).
 - Optional: an Ingress controller and external-dns, only for name-based access by other clients.
 
 ## 2. Network
@@ -181,6 +181,8 @@ time() - radwatch_last_report_timestamp_seconds          # seconds since the las
 ```
 
 **Grafana shows the dashboard.** The sidecar logs `Writing /tmp/dashboards/radwatch.json` (`kubectl -n <grafana namespace> logs deploy/<grafana> -c grafana-sc-dashboard`), and the dashboard appears as "Radwatch" within about a minute. It is provisioned from the chart: edits in the Grafana UI are overwritten on the next sync, so use "Save as" for a personal variant.
+
+**Prometheus loaded the alert rules.** In Status → Rules, the group `radwatch` lists `RadwatchExporterDown`, `RadwatchDeviceSilent`, `RadwatchDoseRateWarning` and `RadwatchDoseRateCritical`, all with health `ok` and state `inactive`. To test the path to Alertmanager, unplug the counter: `RadwatchDeviceSilent` fires after about 12 minutes (10 min silent plus `for: 2m`) and resolves after the next upload. Silence `service="radwatch"` in Alertmanager before deliberate tests with a source.
 
 ## 6. Troubleshooting
 
