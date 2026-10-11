@@ -12,7 +12,7 @@
 
 The [Dockerfile](../../Dockerfile) at the repo root (IMPL-17, ADR-010):
 
-- **Build stage:** `golang:1.26-bookworm` (tag written out, not an `ARG`, so Renovate can update it), run on the build machine's platform and cross-compiling to `TARGETOS`/`TARGETARCH`, so multi-arch builds (PD-04) need no emulation. Static binary (`CGO_ENABLED=0`, `-trimpath`, `-s -w`), version injected with `--build-arg VERSION=...` into `main.version` (IMPL-18). BuildKit cache mounts for modules and the build cache.
+- **Build stage:** `golang:1.27-bookworm` (tag written out, not an `ARG`, so Renovate can update it), run on the build machine's platform and cross-compiling to `TARGETOS`/`TARGETARCH`, so multi-arch builds (PD-04) need no emulation. Static binary (`CGO_ENABLED=0`, `-trimpath`, `-s -w`), version injected with `--build-arg VERSION=...` into `main.version` (IMPL-18). BuildKit cache mounts for modules and the build cache.
 - **Final stage:** `gcr.io/distroless/static-debian12:nonroot`, only the binary at `/radwatch-exporter`, `USER 65532:65532`, ports 8080 and 9090.
 - Both base images are pinned by digest. The Go version must match `go.mod`; Renovate bumps both in one PR (PD-09).
 - [.dockerignore](../../.dockerignore) is an allowlist: only `go.mod`, `go.sum`, `cmd/` and `internal/`, without tests.
