@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Minimal: only the static binary (plus CA certificates if outbound forwarding to gmcmap.com over HTTPS is ever enabled).
+- Minimal: only the static binary (plus CA certificates for HTTPS forwarding, e.g. to radmon.org).
 - Runs as a non-root user (numeric UID so `runAsNonRoot` can be verified).
 - Works with a **read-only root filesystem**: the service writes nothing to disk. Logs go to stdout.
 - No shell, no package manager in the final image.

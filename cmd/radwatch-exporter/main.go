@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/dickeyf/radwatch-exporter/internal/config"
+	"github.com/dickeyf/radwatch-exporter/internal/forward"
 	"github.com/dickeyf/radwatch-exporter/internal/health"
 	"github.com/dickeyf/radwatch-exporter/internal/ingest"
 	"github.com/dickeyf/radwatch-exporter/internal/ingest/gmcmap"
@@ -49,11 +50,21 @@ func run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 	m := metrics.New(cfg.DeviceNames, cfg.StaleAfter)
 	m.InitProtocol(gmcmap.Protocol)
 
+	targets := forward.Targets(cfg)
+	names := make([]string, 0, len(targets))
+	for _, t := range targets {
+		m.InitForward(t.Name(), forward.ResultOK, forward.ResultError, forward.ResultDropped, forward.ResultSkipped)
+		names = append(names, t.Name())
+	}
+	rec := forward.New(m, m, logger, targets...)
+	rec.Start(ctx)
+	defer rec.Close() // after the servers below have shut down
+
 	var checker health.Checker
 	ingestMux := http.NewServeMux()
 	checker.Register(ingestMux)
 	guard := ingest.SourceGuard{Allowed: cfg.AllowedCIDRs, Trusted: cfg.TrustedProxies}
-	gmcmap.New(cfg.GMCMap, m, logger).Register(ingestMux, guard.Middleware(gmcmap.Protocol, m, logger))
+	gmcmap.New(cfg.GMCMap, rec, logger).Register(ingestMux, guard.Middleware(gmcmap.Protocol, m, logger))
 	metricsMux := http.NewServeMux()
 	metricsMux.Handle("GET /metrics", m.Handler())
 
@@ -90,6 +101,7 @@ func run(ctx context.Context, cfg config.Config, logger *slog.Logger) error {
 		"listen_addr", cfg.ListenAddr,
 		"metrics_addr", cfg.MetricsAddr,
 		"gmcmap_path", cfg.GMCMap.Path,
+		"forward_targets", names,
 	)
 
 	var runErr error

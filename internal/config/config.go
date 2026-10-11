@@ -3,7 +3,8 @@
 // Values are layered: built-in defaults, then an optional YAML file (path in
 // RADWATCH_CONFIG_FILE), then RADWATCH_* environment variables. A variable
 // that is set, even to the empty string, overrides the file. Settings for a
-// specific upload protocol live in their own section (gmcmap for now).
+// specific upload protocol live in their own section (gmcmap for now); radmon
+// is a forwarding target only (IMPL-34).
 package config
 
 import (
@@ -36,6 +37,7 @@ type Config struct {
 	TrustedProxies Prefixes          `yaml:"trusted_proxies"`
 	DeviceNames    map[string]string `yaml:"device_names"`
 	GMCMap         GMCMap            `yaml:"gmcmap"`
+	Radmon         Radmon            `yaml:"radmon"`
 }
 
 // GMCMap configures the GQ GMCmap upload protocol (GET log2.asp?AID=..&GID=..).
@@ -45,7 +47,23 @@ type GMCMap struct {
 	AllowedAIDs    []string `yaml:"allowed_aids"`
 	ResponseStatus int      `yaml:"response_status"`
 	ResponseBody   string   `yaml:"response_body"`
-	ForwardURL     string   `yaml:"forward_url"`
+	// ForwardURL re-sends each accepted GMCmap reading there (e.g.
+	// http://www.gmcmap.com/log2.asp). Empty disables forwarding (PD-05).
+	ForwardURL string `yaml:"forward_url"`
+}
+
+// Radmon configures forwarding to radmon.org (or a compatible server). It is
+// not an upload protocol: the exporter never receives radmon uploads.
+type Radmon struct {
+	// ForwardURL is the submit endpoint (e.g. https://radmon.org/radmon.php).
+	// Empty disables forwarding (PD-05).
+	ForwardURL string `yaml:"forward_url"`
+	User       string `yaml:"user"`
+	// Password is best set through RADWATCH_RADMON_PASSWORD from a Secret.
+	Password string `yaml:"password"`
+	// DeviceID limits forwarding to one device (a radmon account is one
+	// station). Empty forwards every device's readings.
+	DeviceID string `yaml:"device_id"`
 }
 
 // Default returns the configuration used when nothing is set.
@@ -163,6 +181,11 @@ func applyEnv(lookup func(string) (string, bool), cfg *Config) error {
 	}
 	str("RADWATCH_GMCMAP_FORWARD_URL", &cfg.GMCMap.ForwardURL)
 
+	str("RADWATCH_RADMON_FORWARD_URL", &cfg.Radmon.ForwardURL)
+	str("RADWATCH_RADMON_USER", &cfg.Radmon.User)
+	str("RADWATCH_RADMON_PASSWORD", &cfg.Radmon.Password)
+	str("RADWATCH_RADMON_DEVICE_ID", &cfg.Radmon.DeviceID)
+
 	return errors.Join(errs...)
 }
 
@@ -207,13 +230,24 @@ func (c Config) Validate() error {
 	if g.ResponseStatus < 100 || g.ResponseStatus > 599 {
 		addErr("gmcmap.response_status %d: not an HTTP status", g.ResponseStatus)
 	}
-	if g.ForwardURL != "" {
-		u, err := url.Parse(g.ForwardURL)
-		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-			addErr("gmcmap.forward_url %q: want an absolute http(s) URL", g.ForwardURL)
+	if g.ForwardURL != "" && !absoluteHTTP(g.ForwardURL) {
+		addErr("gmcmap.forward_url %q: want an absolute http(s) URL", g.ForwardURL)
+	}
+
+	if r := c.Radmon; r.ForwardURL != "" {
+		if !absoluteHTTP(r.ForwardURL) {
+			addErr("radmon.forward_url %q: want an absolute http(s) URL", r.ForwardURL)
+		}
+		if r.User == "" || r.Password == "" {
+			addErr("radmon: user and password are required when forward_url is set")
 		}
 	}
 	return errors.Join(errs...)
+}
+
+func absoluteHTTP(raw string) bool {
+	u, err := url.Parse(raw)
+	return err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
 }
 
 // Prefixes is a list of CIDRs; bare IPs are accepted as single-host prefixes.

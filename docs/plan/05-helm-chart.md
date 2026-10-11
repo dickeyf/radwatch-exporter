@@ -14,7 +14,6 @@ deploy/helm/radwatch-exporter/
 │   ├── service-ingest.yaml   # optional, ingestService.enabled (IMPL-38)
 │   ├── ingress.yaml
 │   ├── configmap.yaml
-│   ├── secret.yaml           # not yet (IMPL-26)
 │   ├── servicemonitor.yaml   # optional, serviceMonitor.enabled (AD-07)
 │   ├── dashboard-configmap.yaml # optional, grafanaDashboard.enabled (IMPL-31)
 │   ├── prometheusrule.yaml   # optional, prometheusRule.enabled (IMPL-32)
@@ -118,17 +117,19 @@ Holds non-secret configuration, consumed as env vars:
 | `RADWATCH_GMCMAP_ALLOWED_AIDS` | `0230111` | Comma-separated allowlist of user IDs |
 | `RADWATCH_GMCMAP_RESPONSE_STATUS` | `200` | HTTP status replied to the device (Q-05) |
 | `RADWATCH_GMCMAP_RESPONSE_BODY` | `OK.ERR0` | Body replied to the device (Q-05) |
-| `RADWATCH_GMCMAP_FORWARD_URL` | `http://www.gmcmap.com/log2.asp` | Optional forwarding (PD-05). Not implemented yet (IMPL-34): validated, then ignored |
+| `RADWATCH_GMCMAP_FORWARD_URL` | `http://www.gmcmap.com/log2.asp` | Optional forwarding to a GMCmap server (PD-05, IMPL-34); empty = off |
+| `RADWATCH_RADMON_FORWARD_URL` | `https://radmon.org/radmon.php` | Optional forwarding to radmon.org (PD-05, IMPL-34); empty = off |
+| `RADWATCH_RADMON_USER` | `station` | radmon.org user |
+| `RADWATCH_RADMON_DEVICE_ID` | `0034021` | Only this device is forwarded to radmon; empty = all |
 
 Keys are final (IMPL-04, ADR-006). The chart may also mount a YAML file and set `RADWATCH_CONFIG_FILE`; env vars override it.
 
 ### Secret (optional)
 
-Not implemented yet (IMPL-26, deferred to Phase 6).
+The chart never creates a Secret (IMPL-26): secrets do not belong in values. The one secret value, the radmon.org password, comes from an existing Secret (`config.radmon.passwordSecret.name` / `key`, e.g. from External Secrets or sealed-secrets) as `RADWATCH_RADMON_PASSWORD` via `secretKeyRef`, never through the ConfigMap. Setting `config.radmon.forwardURL` without it fails the render.
 
-- Rendered only if `secret.create: true`; or reference an existing one with `secret.existingSecret`.
 - The GMC-500+ is not known to support credentials (Q-02). AID/GID are sent in clear text and are not secrets.
-- Plausible future uses: a shared token appended to the URL path (e.g. URL = `ingest/<random-token>`) if the device lets you set an arbitrary path (AD-04), or gmcmap.com account IDs for forwarding if you'd rather not keep them in a ConfigMap.
+- A path-as-secret token (Q-04) would use the same pattern if ever needed.
 
 ### ServiceMonitor (optional)
 

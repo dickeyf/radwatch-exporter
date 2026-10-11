@@ -28,7 +28,7 @@ type Metrics struct {
 	now         func() time.Time
 
 	cpm, acpm, doseRate, lastReport *prometheus.GaugeVec
-	reports, requests               *prometheus.CounterVec
+	reports, requests, forwards     *prometheus.CounterVec
 
 	mu       sync.Mutex
 	lastSeen map[[3]string]time.Time // device label values -> last accepted reading
@@ -55,6 +55,9 @@ func New(deviceNames map[string]string, staleAfter time.Duration) *Metrics {
 		requests: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: namespace, Name: "ingest_requests_total", Help: "Ingest requests by protocol and result.",
 		}, []string{"protocol", "result"}),
+		forwards: prometheus.NewCounterVec(prometheus.CounterOpts{
+			Namespace: namespace, Name: "forward_requests_total", Help: "Readings forwarded to public maps, by target and result.",
+		}, []string{"target", "result"}),
 		lastSeen: map[[3]string]time.Time{},
 	}
 	m.reg.MustRegister(
@@ -71,6 +74,18 @@ func (m *Metrics) InitProtocol(protocol string) {
 	for _, result := range []string{ingest.ResultAccepted, ingest.ResultBadRequest, ingest.ResultRejectedAllowlist} {
 		m.requests.WithLabelValues(protocol, result)
 	}
+}
+
+// InitForward creates the forward counters of a target at zero.
+func (m *Metrics) InitForward(target string, results ...string) {
+	for _, result := range results {
+		m.forwards.WithLabelValues(target, result)
+	}
+}
+
+// CountForward counts one forward attempt (forward.Counter).
+func (m *Metrics) CountForward(target, result string) {
+	m.forwards.WithLabelValues(target, result).Inc()
 }
 
 // Record implements ingest.Recorder.
@@ -124,7 +139,7 @@ func (m *Metrics) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (m *Metrics) collectors() []prometheus.Collector {
-	return []prometheus.Collector{m.cpm, m.acpm, m.doseRate, m.lastReport, m.reports, m.requests}
+	return []prometheus.Collector{m.cpm, m.acpm, m.doseRate, m.lastReport, m.reports, m.requests, m.forwards}
 }
 
 // expire must be called with mu held.

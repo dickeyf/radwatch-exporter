@@ -69,11 +69,11 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 
 ## Phase 6 — Hardening and extras (optional)
 
-- Forward readings to gmcmap.com / radmon.org (PD-05).
+- Forward readings to gmcmap.com / radmon.org, configurable and off by default (PD-05, IMPL-34).
 - Rate limiting per source IP.
 - NetworkPolicy (IMPL-33, chart 0.5.0).
 - Chart release automation beyond IMPL-36 (chart versioned separately, `appVersion` = image, PD-08).
-- Optional Secret (IMPL-26).
+- Optional Secret for the radmon.org password (IMPL-26).
 
 ## Milestone summary
 

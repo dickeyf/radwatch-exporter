@@ -1,4 +1,7 @@
 {{- $c := .Values.config -}}
+{{- if and $c.radmon.forwardURL (not $c.radmon.passwordSecret.name) }}
+{{- fail "config.radmon.passwordSecret.name is required when config.radmon.forwardURL is set" }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -24,3 +27,6 @@ data:
   RADWATCH_GMCMAP_RESPONSE_STATUS: {{ $c.gmcmap.responseStatus | toString | quote }}
   RADWATCH_GMCMAP_RESPONSE_BODY: {{ $c.gmcmap.responseBody | quote }}
   RADWATCH_GMCMAP_FORWARD_URL: {{ $c.gmcmap.forwardURL | quote }}
+  RADWATCH_RADMON_FORWARD_URL: {{ $c.radmon.forwardURL | quote }}
+  RADWATCH_RADMON_USER: {{ $c.radmon.user | quote }}
+  RADWATCH_RADMON_DEVICE_ID: {{ $c.radmon.deviceID | quote }}

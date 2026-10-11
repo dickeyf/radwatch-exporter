@@ -34,8 +34,20 @@ config:
     allowedAIDs: []
     responseStatus: 200
     responseBody: OK.ERR0
-    # Not implemented yet (IMPL-34): validated, then ignored.
+    # Re-send each accepted reading to a GMCmap server (PD-05, IMPL-34).
+    # Empty: off. Public map: http://www.gmcmap.com/log2.asp
     forwardURL: ""
+  # Forward readings to radmon.org or a compatible server (PD-05, IMPL-34).
+  radmon:
+    # Empty: off. Public map: https://radmon.org/radmon.php
+    forwardURL: ""
+    user: ""
+    # Only this device's readings (a radmon account is one station); empty: all.
+    deviceID: ""
+    # The password comes from an existing Secret (never from values).
+    passwordSecret:
+      name: ""
+      key: password
 
 # Extra env vars for the container, as a list of EnvVar objects.
 extraEnv: []

@@ -6,6 +6,12 @@ config:
   deviceNames: {"0034021": office}
   gmcmap:
     allowedGIDs: ["0034021"]
+    forwardURL: http://www.gmcmap.com/log2.asp
+  radmon:
+    forwardURL: https://radmon.org/radmon.php
+    user: station
+    deviceID: "0034021"
+    passwordSecret: {name: radmon, key: password}
 podAnnotations: {example.com/note: ci}
 podLabels: {tier: ci}
 service:

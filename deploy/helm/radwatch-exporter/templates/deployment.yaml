@@ -51,9 +51,20 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "radwatch-exporter.fullname" . }}
-          {{- with .Values.extraEnv }}
+          {{- $pw := .Values.config.radmon.passwordSecret }}
+          {{- if or .Values.extraEnv $pw.name }}
           env:
+            {{- if $pw.name }}
+            # Optional Secret (IMPL-26): the radmon.org password, never in the ConfigMap.
+            - name: RADWATCH_RADMON_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $pw.name }}
+                  key: {{ $pw.key }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
+            {{- end }}
           {{- end }}
           livenessProbe:
             httpGet:

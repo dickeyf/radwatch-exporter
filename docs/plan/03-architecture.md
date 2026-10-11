@@ -17,7 +17,7 @@ Service radwatch-exporter (ClusterIP)
    ▼
 Pod: radwatch-exporter (single static Go binary)
    ├─ ingest: source-IP check → validate → GID/AID check → update gauges (ADR-009)
-   ├─ (optional, not implemented yet: IMPL-34) forwarder → gmcmap.com / radmon.org
+   ├─ (optional, off by default: IMPL-34) forwarder → gmcmap.com / radmon.org
    └─ Prometheus registry → /metrics
    ▲
 Alloy / Prometheus (scrapes "metrics" port in-cluster)
@@ -41,6 +41,7 @@ Decided in ADR-007 (AD-05). Every device metric carries the same three labels:
 | `radwatch_last_report_timestamp_seconds` | gauge | `protocol`, `device_id`, `device` | Unix time of the last accepted reading |
 | `radwatch_reports_total` | counter | `protocol`, `device_id`, `device` | Accepted readings |
 | `radwatch_ingest_requests_total` | counter | `protocol`, `result` (`accepted`, `bad_request`, `rejected_allowlist`) | No device labels, so rejected requests can't create series |
+| `radwatch_forward_requests_total` | counter | `target` (`gmcmap`, `radmon`), `result` (`ok`, `error`, `dropped`, `skipped`) | Only for enabled forward targets (IMPL-34) |
 | standard `go_*` / `process_*` | — | — | From client_golang collectors |
 
 A device that has not reported for `stale_after` (default 5 min) loses its `cpm`, `acpm` and dose-rate series; its timestamp and `reports_total` stay (ADR-008). A gauge is also dropped when a reading stops including that field.
@@ -134,7 +135,7 @@ Outside the app, the private LoadBalancer IP of the ingest Service (with the rou
 
 **Status:** Accepted (AD-08, confirmed 2026-10-09).
 
-Final stage `gcr.io/distroless/static-debian12:nonroot`: CA certificates (for future HTTPS forwarding, IMPL-34), a `nonroot` user with UID/GID 65532, tzdata, no shell or package manager. `scratch` would be a few hundred KB smaller but needs CA certs and a passwd entry copied in by hand; Chainguard's static image is equivalent but only `latest` is free to pull by tag. Build stage `golang:<Go version>-bookworm`. Both are pinned by digest and updated by Renovate (PD-09). The build cross-compiles on the build platform, so arm64 images (PD-04) need no QEMU.
+Final stage `gcr.io/distroless/static-debian12:nonroot`: CA certificates (for HTTPS forwarding, IMPL-34), a `nonroot` user with UID/GID 65532, tzdata, no shell or package manager. `scratch` would be a few hundred KB smaller but needs CA certs and a passwd entry copied in by hand; Chainguard's static image is equivalent but only `latest` is free to pull by tag. Build stage `golang:<Go version>-bookworm`. Both are pinned by digest and updated by Renovate (PD-09). The build cross-compiles on the build platform, so arm64 images (PD-04) need no QEMU.
 
 ### ADR-011 — No authentication on `/metrics`; optional NetworkPolicy
 
@@ -146,7 +147,7 @@ The chart instead ships an optional NetworkPolicy (`networkPolicy.enabled`, IMPL
 
 - **Ingest port:** from `config.allowedCIDRs` as `ipBlock`s (a bare IP becomes /32 or /128), plus extra peers such as the ingress controller (`ingestFrom`). Through the ingest Service with `externalTrafficPolicy: Local` the counter keeps its address, so the same list works at both layers. With neither, the port stays open.
 - **Metrics port:** from `metricsFrom` peers (e.g. the `monitoring` namespace); empty means any pod in the cluster, never outside.
-- **Egress:** denied unless listed (`egress`). The exporter makes no outbound calls; forwarding (IMPL-34) will need DNS and its target here.
+- **Egress:** denied unless listed (`egress`). The exporter makes no outbound calls unless forwarding (IMPL-34) is on, which needs DNS and its targets here.
 
 Off by default: a wrong peer silently breaks scraping or ingest, and kubelet probe handling differs by CNI. Revisit if `/metrics` ever has to leave the cluster.
 

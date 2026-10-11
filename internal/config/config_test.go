@@ -50,6 +50,10 @@ func TestLoadEnv(t *testing.T) {
 		"RADWATCH_GMCMAP_RESPONSE_STATUS": "204",
 		"RADWATCH_GMCMAP_RESPONSE_BODY":   " OK ",
 		"RADWATCH_GMCMAP_FORWARD_URL":     "http://www.gmcmap.com/log2.asp",
+		"RADWATCH_RADMON_FORWARD_URL":     "https://radmon.org/radmon.php",
+		"RADWATCH_RADMON_USER":            "station",
+		"RADWATCH_RADMON_PASSWORD":        "secret",
+		"RADWATCH_RADMON_DEVICE_ID":       "0034021",
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -67,6 +71,7 @@ func TestLoadEnv(t *testing.T) {
 	want.GMCMap.ResponseStatus = 204
 	want.GMCMap.ResponseBody = " OK "
 	want.GMCMap.ForwardURL = "http://www.gmcmap.com/log2.asp"
+	want.Radmon = Radmon{ForwardURL: "https://radmon.org/radmon.php", User: "station", Password: "secret", DeviceID: "0034021"}
 	if !reflect.DeepEqual(cfg, want) {
 		t.Errorf("got  %+v\nwant %+v", cfg, want)
 	}
@@ -141,6 +146,8 @@ func TestLoadErrors(t *testing.T) {
 		{"bad status", map[string]string{"RADWATCH_GMCMAP_RESPONSE_STATUS": "42"}, "", "response_status"},
 		{"non-numeric status", map[string]string{"RADWATCH_GMCMAP_RESPONSE_STATUS": "ok"}, "", "RESPONSE_STATUS"},
 		{"bad forward url", map[string]string{"RADWATCH_GMCMAP_FORWARD_URL": "ftp://x"}, "", "forward_url"},
+		{"bad radmon url", map[string]string{"RADWATCH_RADMON_FORWARD_URL": "radmon.org", "RADWATCH_RADMON_USER": "u", "RADWATCH_RADMON_PASSWORD": "p"}, "", "radmon.forward_url"},
+		{"radmon without password", map[string]string{"RADWATCH_RADMON_FORWARD_URL": "https://radmon.org/radmon.php", "RADWATCH_RADMON_USER": "u"}, "", "user and password"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

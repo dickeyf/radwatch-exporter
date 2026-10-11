@@ -39,7 +39,7 @@ Everything else about the device's network behaviour (TLS, ports, auth, retries,
 
 **Optional / later**
 
-- Forwarding each reading to gmcmap.com (or radmon.org) so the public map keeps working.
+- Forwarding each reading to gmcmap.com and/or radmon.org, off by default (PD-05, IMPL-34).
 
 **Out of scope**
 
