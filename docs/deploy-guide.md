@@ -89,7 +89,7 @@ spec:
   chart:
     spec:
       chart: radwatch-exporter
-      version: "0.4.x"
+      version: "0.5.x"
       sourceRef:
         kind: HelmRepository
         name: radwatch
@@ -120,6 +120,11 @@ spec:
       enabled: true                        # alerts: device silent, dose rate high, exporter down
       labels:
         release: kube-prometheus-stack     # the Prometheus CR's ruleSelector
+    networkPolicy:
+      enabled: true                        # ingest only from allowedCIDRs, metrics only from Prometheus, no egress
+      metricsFrom:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: monitoring}}
+          podSelector: {matchLabels: {app.kubernetes.io/name: prometheus}}
 ```
 
 Optional, for name-based access by other clients through the Ingress controller (not used by the counter):
@@ -181,6 +186,15 @@ time() - radwatch_last_report_timestamp_seconds          # seconds since the las
 ```
 
 **Grafana shows the dashboard.** The sidecar logs `Writing /tmp/dashboards/radwatch.json` (`kubectl -n <grafana namespace> logs deploy/<grafana> -c grafana-sc-dashboard`), and the dashboard appears as "Radwatch" within about a minute. It is provisioned from the chart: edits in the Grafana UI are overwritten on the next sync, so use "Save as" for a personal variant.
+
+**The NetworkPolicy holds.** The pod stays ready (Cilium lets kubelet probes through), uploads are still accepted and the target is still up, while any other pod times out on the metrics port:
+
+```console
+$ kubectl -n radwatch run nptest --rm -i --restart=Never --image=busybox:1.36 -- wget -T 5 -qO- http://radwatch-radwatch-exporter:9090/metrics
+wget: download timed out
+```
+
+If you add an Ingress, put its controller in `networkPolicy.ingestFrom`.
 
 **Prometheus loaded the alert rules.** In Status → Rules, the group `radwatch` lists `RadwatchExporterDown`, `RadwatchDeviceSilent`, `RadwatchDoseRateWarning` and `RadwatchDoseRateCritical`, all with health `ok` and state `inactive`. To test the path to Alertmanager, unplug the counter: `RadwatchDeviceSilent` fires after about 12 minutes (10 min silent plus `for: 2m`) and resolves after the next upload. Silence `service="radwatch"` in Alertmanager before deliberate tests with a source.
 
