@@ -80,7 +80,7 @@ The counter pushes to us; we keep the last value in memory and let Prometheus/Al
 
 **Status:** Accepted (AD-06, confirmed 2026-10-09).
 
-No persistence; on restart the gauges are empty until the next report (≤ 2 min, Q-07). One replica: with more, uploads and scrapes would land on different pods and values would flip between "stale" and "fresh". `strategy: Recreate`, so two pods never receive uploads at once; a gap of one reading on deploy is acceptable. The chart hard-codes both.
+No persistence; on restart the gauges are empty until the next report (within the device's upload interval, 1–2 min, Q-07). One replica: with more, uploads and scrapes would land on different pods and values would flip between "stale" and "fresh". `strategy: Recreate`, so two pods never receive uploads at once; a gap of one reading on deploy is acceptable. The chart hard-codes both.
 
 ### ADR-004 — Separate ports for ingest and metrics
 

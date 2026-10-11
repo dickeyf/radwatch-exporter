@@ -89,7 +89,7 @@ spec:
   chart:
     spec:
       chart: radwatch-exporter
-      version: "0.2.x"
+      version: "0.3.x"
       sourceRef:
         kind: HelmRepository
         name: radwatch
@@ -114,6 +114,8 @@ spec:
         # Must match the Prometheus CR's serviceMonitorSelector; check with:
         # kubectl get prometheus -A -o jsonpath='{.items[*].spec.serviceMonitorSelector}'
         release: kube-prometheus-stack
+    grafanaDashboard:
+      enabled: true                        # ConfigMap for the Grafana sidecar (label grafana_dashboard: "1")
 ```
 
 Optional, for name-based access by other clients through the Ingress controller (not used by the counter):
@@ -158,7 +160,7 @@ radwatch-radwatch-exporter          ClusterIP      <none>         80/TCP,9090/TC
 radwatch-radwatch-exporter-ingest   LoadBalancer   10.10.10.20    80:30769/TCP
 ```
 
-**Readings arrive with the counter's own address.** One `reading accepted` per upload interval (2 minutes on the reference counter). `client_ip` must be the counter, not a node: that proves `externalTrafficPolicy: Local` works and the allowlist can be on.
+**Readings arrive with the counter's own address.** One `reading accepted` per upload interval (1 minute on the reference counter; configurable on the device). `client_ip` must be the counter, not a node: that proves `externalTrafficPolicy: Local` works and the allowlist can be on.
 
 ```console
 $ kubectl -n radwatch logs deploy/radwatch-radwatch-exporter
@@ -171,8 +173,10 @@ $ kubectl -n radwatch logs deploy/radwatch-radwatch-exporter
 ```promql
 radwatch_cpm{device="home"}                              # counts per minute
 radwatch_dose_rate_sieverts_per_hour * 1e6               # µSv/h
-time() - radwatch_last_report_timestamp_seconds          # seconds since the last upload (< 120 + jitter)
+time() - radwatch_last_report_timestamp_seconds          # seconds since the last upload (< interval + jitter)
 ```
+
+**Grafana shows the dashboard.** The sidecar logs `Writing /tmp/dashboards/radwatch.json` (`kubectl -n <grafana namespace> logs deploy/<grafana> -c grafana-sc-dashboard`), and the dashboard appears as "Radwatch" within about a minute. It is provisioned from the chart: edits in the Grafana UI are overwritten on the next sync, so use "Save as" for a personal variant.
 
 ## 6. Troubleshooting
 

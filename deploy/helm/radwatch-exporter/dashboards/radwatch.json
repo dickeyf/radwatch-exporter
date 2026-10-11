@@ -245,7 +245,7 @@
       "id": 4,
       "type": "stat",
       "title": "Since last upload",
-      "description": "The reference counter uploads every 2 minutes. Orange after 5 min, red after 10 min.",
+      "description": "Devices upload every 1–2 minutes (configurable on the device). Orange after 5 min, red after 10 min.",
       "datasource": {
         "type": "prometheus",
         "uid": "${datasource}"

@@ -65,7 +65,7 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 - Grafana dashboard JSON (CPM, µSv/h, time since last report; ACPM only as a long-term reference), log scales, reference lines (background, 1 mSv/year, and 3.6 R/h "not great, not terrible"), IMPL-31.
 - Alert rules: device silent > N minutes; dose rate above threshold.
 
-**Exit:** dashboard live; silence alert fires when the counter is unplugged.
+**Exit:** dashboard live; silence alert fires when the counter is unplugged. (Dashboard live since chart 0.3.0; alerts pending, IMPL-32.)
 
 ## Phase 6 — Hardening and extras (optional)
 
