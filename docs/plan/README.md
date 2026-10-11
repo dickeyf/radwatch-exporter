@@ -16,7 +16,7 @@ A lightweight service that receives readings pushed by a GQ GMC-500+ Geiger coun
 | [06-security-open-questions.md](06-security-open-questions.md) | Endpoint restriction, TLS, auth, open questions |
 | [07-worklist.md](07-worklist.md) | Work items: implementation, architectural decisions, project decisions |
 
-See also the [deploy guide](../deploy-guide.md): the reference deployment (Flux, Cilium BGP, pfSense), verified end to end.
+See also the [deploy guide](../deploy-guide.md) (the reference deployment, verified end to end) and the [reference dose rates](../reference-dose-rates.md) for dashboards.
 
 ## Using this plan with Claude Code
 
