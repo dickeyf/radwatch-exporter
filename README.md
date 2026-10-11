@@ -72,6 +72,8 @@ make lint    # requires golangci-lint v2
 make run
 ```
 
+Dependencies are kept current by [Renovate](renovate.json), weekly: minor, patch and digest updates (Go modules, GitHub Actions, base images, CI tools) automerge once CI is green; major updates and the Go toolchain (`go.mod` plus the `golang` build image, in one PR) are merged by hand.
+
 ## Kubernetes (Helm)
 
 The chart is in [deploy/helm/radwatch-exporter](deploy/helm/radwatch-exporter); every value is documented in its `values.yaml`. For a full walkthrough (Flux, Cilium BGP, pfSense), see the [deploy guide](docs/deploy-guide.md).

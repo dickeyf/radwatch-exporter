@@ -162,6 +162,6 @@ On a `vX.Y.Z` tag, the CI `publish-chart` job runs after the chart checks and th
 
 The CI `chart` job (IMPL-28) runs on every push, for the default values and for `ci/full-values.yaml`:
 
-- `helm lint --strict`, which also enforces `values.schema.json`.
+- Helm 4 (version pinned in the workflow, updated by Renovate). `helm lint --strict`, which also enforces `values.schema.json` and rejects non-standard `Chart.yaml` fields (so the licence is the `artifacthub.io/license` annotation).
 - `helm template | kubeconform -strict`, with the datreeio CRDs catalog for the ServiceMonitor and PrometheusRule.
 - `kube-linter` with its default checks plus explicit security checks (non-root, read-only rootfs, privilege escalation, probe ports, memory requests...). Exclusions are listed with their reason in `.kube-linter.yaml` (single replica by design, no CPU limit, no ServiceAccount).

@@ -53,7 +53,7 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 - Chart published to GHCR as an OCI artifact on release tags (IMPL-36).
 - TLS secret referenced by name only (created elsewhere in the same namespace).
 - Hardened pod security context.
-- `helm lint`, `helm template` checks, and `ct`/kubeconform in CI.
+- `helm lint --strict`, `helm template` + kubeconform, and kube-linter in CI.
 
 **Exit:** the chart is installed in the cluster; the device's uploads reach it (through the ingest Service, since the device needs an IP, Q-08) and show up in Prometheus.
 
@@ -77,9 +77,9 @@ Each phase ends with something that works on its own. Phase IDs map to work item
 
 ## Milestone summary
 
-| Milestone | After phase | What you have |
-|-----------|-------------|---------------|
-| M1 | 1 | Working exporter on a laptop |
-| M2 | 2 | Real device confirmed, unknowns answered |
-| M3 | 4 | Running in k8s |
-| M4 | 5 | Dashboard + alerts |
+| Milestone | After phase | What you have | Reached |
+|-----------|-------------|---------------|---------|
+| M1 | 1 | Working exporter on a laptop | 2026-10-09 |
+| M2 | 2 | Real device confirmed, unknowns answered | 2026-10-09 |
+| M3 | 4 | Running in k8s | 2026-10-10 |
+| M4 | 5 | Dashboard + alerts | 2026-10-10 |
