@@ -1,0 +1,52 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "PD-09: keep Go, base images, Go modules, GitHub Actions and CI tools current.",
+  "extends": ["config:recommended", ":semanticCommitsDisabled"],
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "postUpdateOptions": ["gomodTidy"],
+  "lockFileMaintenance": { "enabled": true },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "kubeconform version in the CI workflow",
+      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+      "matchStrings": ["KUBECONFORM_VERSION: (?<currentValue>v\\S+)"],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "yannh/kubeconform"
+    },
+    {
+      "customType": "regex",
+      "description": "kube-linter version in the CI workflow",
+      "managerFilePatterns": ["/^\\.github/workflows/.+\\.ya?ml$/"],
+      "matchStrings": ["KUBE_LINTER_VERSION: (?<currentValue>v\\S+)"],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "stackrox/kube-linter"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Bump the go directive in go.mod (Renovate leaves it alone by default)",
+      "matchDatasources": ["golang-version"],
+      "rangeStrategy": "bump"
+    },
+    {
+      "description": "Minor and patch updates of modules, actions, images and CI tools merge once CI is green",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true
+    },
+    {
+      "description": "Base image digest refreshes in one PR",
+      "matchDatasources": ["docker"],
+      "matchUpdateTypes": ["digest"],
+      "groupName": "base image digests"
+    },
+    {
+      "description": "Go toolchain: the go.mod directive and the golang build image move together and are never automerged",
+      "matchPackageNames": ["go", "golang"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "groupName": "Go toolchain",
+      "automerge": false
+    }
+  ]
+}

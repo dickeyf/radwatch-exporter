@@ -1,9 +1,8 @@
 # syntax=docker/dockerfile:1
 
-# Base images are pinned by digest (ADR-010); keep GO_VERSION in sync with go.mod.
-ARG GO_VERSION=1.26
-
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c AS build
+# Base images are pinned by digest (ADR-010) and kept current by Renovate (PD-09),
+# which bumps the golang tag together with the go directive in go.mod.
+FROM --platform=$BUILDPLATFORM golang:1.26-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod go mod download

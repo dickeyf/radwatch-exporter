@@ -134,7 +134,7 @@ Outside the app, the private LoadBalancer IP of the ingest Service (with the rou
 
 **Status:** Accepted (AD-08, confirmed 2026-10-09).
 
-Final stage `gcr.io/distroless/static-debian12:nonroot`: CA certificates (for future HTTPS forwarding, IMPL-34), a `nonroot` user with UID/GID 65532, tzdata, no shell or package manager. `scratch` would be a few hundred KB smaller but needs CA certs and a passwd entry copied in by hand; Chainguard's static image is equivalent but only `latest` is free to pull by tag. Build stage `golang:<GO_VERSION>-bookworm`. Both are pinned by digest and updated by a bot (PD-09). The build cross-compiles on the build platform, so arm64 images (PD-04) need no QEMU.
+Final stage `gcr.io/distroless/static-debian12:nonroot`: CA certificates (for future HTTPS forwarding, IMPL-34), a `nonroot` user with UID/GID 65532, tzdata, no shell or package manager. `scratch` would be a few hundred KB smaller but needs CA certs and a passwd entry copied in by hand; Chainguard's static image is equivalent but only `latest` is free to pull by tag. Build stage `golang:<Go version>-bookworm`. Both are pinned by digest and updated by Renovate (PD-09). The build cross-compiles on the build platform, so arm64 images (PD-04) need no QEMU.
 
 ## Decisions still open
 

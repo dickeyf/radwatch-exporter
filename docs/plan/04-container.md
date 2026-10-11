@@ -12,9 +12,9 @@
 
 The [Dockerfile](../../Dockerfile) at the repo root (IMPL-17, ADR-010):
 
-- **Build stage:** `golang:1.26-bookworm`, run on the build machine's platform and cross-compiling to `TARGETOS`/`TARGETARCH`, so multi-arch builds (PD-04) need no emulation. Static binary (`CGO_ENABLED=0`, `-trimpath`, `-s -w`), version injected with `--build-arg VERSION=...` into `main.version` (IMPL-18). BuildKit cache mounts for modules and the build cache.
+- **Build stage:** `golang:1.26-bookworm` (tag written out, not an `ARG`, so Renovate can update it), run on the build machine's platform and cross-compiling to `TARGETOS`/`TARGETARCH`, so multi-arch builds (PD-04) need no emulation. Static binary (`CGO_ENABLED=0`, `-trimpath`, `-s -w`), version injected with `--build-arg VERSION=...` into `main.version` (IMPL-18). BuildKit cache mounts for modules and the build cache.
 - **Final stage:** `gcr.io/distroless/static-debian12:nonroot`, only the binary at `/radwatch-exporter`, `USER 65532:65532`, ports 8080 and 9090.
-- Both base images are pinned by digest. `GO_VERSION` must match `go.mod` (PD-09).
+- Both base images are pinned by digest. The Go version must match `go.mod`; Renovate bumps both in one PR (PD-09).
 - [.dockerignore](../../.dockerignore) is an allowlist: only `go.mod`, `go.sum`, `cmd/` and `internal/`, without tests.
 
 Build locally with `make image` (passes `VERSION` from `git describe`).
@@ -22,7 +22,7 @@ Build locally with `make image` (passes `VERSION` from `git describe`).
 Notes:
 
 - `distroless/static:nonroot` includes CA certs, `/etc/passwd` with the `nonroot` user and tzdata, and nothing else (chosen in ADR-010 over `scratch` and Chainguard static).
-- Base images are pinned by digest; Renovate/Dependabot should keep them current (PD-09).
+- Base images are pinned by digest; Renovate keeps the tags and digests current ([renovate.json](../../renovate.json), PD-09).
 - Build for `linux/amd64` and `linux/arm64` if any cluster node is ARM (PD-04).
 - No `HEALTHCHECK` instruction: Kubernetes probes handle health, and there is no shell or curl in the image anyway. If a probe-from-inside is ever wanted, add a `healthcheck` subcommand to the binary.
 
