@@ -35,6 +35,18 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       # The process finishes shutting down within 10 s of SIGTERM.
       terminationGracePeriodSeconds: 15
+      {{- with .Values.config.radmon.passwordSecret }}
+      {{- if .name }}
+      volumes:
+        # Optional Secret (IMPL-26): the radmon.org password, as a file (not an env var).
+        - name: radmon-password
+          secret:
+            secretName: {{ .name }}
+            items:
+              - key: {{ .key }}
+                path: password
+      {{- end }}
+      {{- end }}
       containers:
         - name: exporter
           image: {{ include "radwatch-exporter.image" . | quote }}
@@ -51,20 +63,15 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "radwatch-exporter.fullname" . }}
-          {{- $pw := .Values.config.radmon.passwordSecret }}
-          {{- if or .Values.extraEnv $pw.name }}
+          {{- with .Values.extraEnv }}
           env:
-            {{- if $pw.name }}
-            # Optional Secret (IMPL-26): the radmon.org password, never in the ConfigMap.
-            - name: RADWATCH_RADMON_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $pw.name }}
-                  key: {{ $pw.key }}
-            {{- end }}
-            {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
-            {{- end }}
+          {{- end }}
+          {{- if .Values.config.radmon.passwordSecret.name }}
+          volumeMounts:
+            - name: radmon-password
+              mountPath: /etc/radwatch/radmon
+              readOnly: true
           {{- end }}
           livenessProbe:
             httpGet:

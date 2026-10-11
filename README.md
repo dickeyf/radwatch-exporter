@@ -132,7 +132,7 @@ Counters only speak plain HTTP on port 80: if you route them through an Ingress,
 Off by default. Set a forward URL to keep a public map fed: each accepted reading is re-sent in the background (10 s timeout, no retries; a failure never affects ingest), counted in `radwatch_forward_requests_total{target,result}`.
 
 - **gmcmap.com:** `config.gmcmap.forwardURL: http://www.gmcmap.com/log2.asp`. The reading goes out with the device's own AID and GID.
-- **radmon.org:** `config.radmon.forwardURL: https://radmon.org/radmon.php`, `config.radmon.user`, and the password from an existing Secret (`config.radmon.passwordSecret.name`/`key`). With several counters, `config.radmon.deviceID` picks the one for that station.
+- **radmon.org:** `config.radmon.forwardURL: https://radmon.org/radmon.php`, `config.radmon.user`, and the password from an existing Secret (`config.radmon.passwordSecret.name`/`key`), mounted as a file. With several counters, `config.radmon.deviceID` picks the one for that station.
 
 Any compatible server works: the URL is the destination. With `networkPolicy` on, add egress for DNS and the targets (ports 80/443).
 
@@ -158,7 +158,8 @@ Defaults, then an optional YAML file (`RADWATCH_CONFIG_FILE`), then env vars; a 
 | `RADWATCH_GMCMAP_FORWARD_URL` | `gmcmap.forward_url` | empty (off). Re-sends each reading there, e.g. `http://www.gmcmap.com/log2.asp` |
 | `RADWATCH_RADMON_FORWARD_URL` | `radmon.forward_url` | empty (off). Submits CPM there, e.g. `https://radmon.org/radmon.php` |
 | `RADWATCH_RADMON_USER` | `radmon.user` | empty (required with a forward URL) |
-| `RADWATCH_RADMON_PASSWORD` | `radmon.password` | empty (required with a forward URL; use a Secret) |
+| `RADWATCH_RADMON_PASSWORD` | `radmon.password` | empty (required with a forward URL, or use the file below) |
+| `RADWATCH_RADMON_PASSWORD_FILE` | `radmon.password_file` | empty. File holding the password, e.g. a mounted Secret; not both |
 | `RADWATCH_RADMON_DEVICE_ID` | `radmon.device_id` | empty (forward every device) |
 
 Lists are comma-separated in env vars (`a,b`) and YAML sequences in the file. CIDR lists accept bare IPs. Device names are `id=name,id=name` in env vars and a map in YAML:

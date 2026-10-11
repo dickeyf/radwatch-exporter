@@ -33,7 +33,7 @@ Status: `TODO` / `DOING` / `DONE` / `DROPPED`. Phase refers to [02-roadmap.md](0
 | IMPL-23 | 4 | ClusterIP Service exposing `http` and `metrics` ports; free-form `service.annotations` / `service.labels` | IMPL-21 | DONE (`service.annotations` / `service.labels`) |
 | IMPL-24 | 4 | Ingress: class, host, ingest path only, annotations passthrough, TLS via existing secret name, HTTP must keep working | IMPL-23, AD-09 | DONE (host required, ingest path only, optional TLS secret, free-form annotations) |
 | IMPL-25 | 4 | ConfigMap from values, consumed via `envFrom` | IMPL-21, IMPL-04 | DONE (`config.*` → `RADWATCH_*`) |
-| IMPL-26 | 6 | Optional Secret (`create` / `existingSecret`), wired via `secretKeyRef` | IMPL-21, AD-04 | DONE (2026-10-11: existing Secret only, for the radmon.org password via `secretKeyRef`; `create` dropped: secrets do not belong in values) |
+| IMPL-26 | 6 | Optional Secret (`create` / `existingSecret`), wired into the pod | IMPL-21, AD-04 | DONE (2026-10-11: existing Secret only, for the radmon.org password, mounted as a file (`RADWATCH_RADMON_PASSWORD_FILE`); `create` dropped: secrets do not belong in values) |
 | IMPL-27 | 4 | `values.schema.json`; `NOTES.txt` printing device Website/URL | IMPL-21 | DONE (`values.schema.json` (string maps, enums, patterns); NOTES prints Website/URL) |
 | IMPL-28 | 4 | CI: `helm lint`, `kubeconform`, policy check on rendered manifests | IMPL-21 | DONE (CI `chart` job: `helm lint --strict` + schema, kubeconform, kube-linter) |
 | IMPL-29 | 4 | Deploy to cluster; point device at the cluster; confirm metrics | IMPL-22..25 | DONE (2026-10-10: Flux, chart 0.2.0, ingest Service on a fixed private IP; uploads accepted with the counter\'s own address; Prometheus target up) |

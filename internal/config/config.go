@@ -59,8 +59,9 @@ type Radmon struct {
 	// Empty disables forwarding (PD-05).
 	ForwardURL string `yaml:"forward_url"`
 	User       string `yaml:"user"`
-	// Password is best set through RADWATCH_RADMON_PASSWORD from a Secret.
-	Password string `yaml:"password"`
+	Password   string `yaml:"password"`
+	// PasswordFile is read at startup into Password, e.g. a mounted Secret.
+	PasswordFile string `yaml:"password_file"`
 	// DeviceID limits forwarding to one device (a radmon account is one
 	// station). Empty forwards every device's readings.
 	DeviceID string `yaml:"device_id"`
@@ -93,6 +94,9 @@ func Load(lookup func(string) (string, bool)) (Config, error) {
 	if err := applyEnv(lookup, &cfg); err != nil {
 		return Config{}, err
 	}
+	if err := readSecretFiles(&cfg); err != nil {
+		return Config{}, err
+	}
 	if err := cfg.Validate(); err != nil {
 		return Config{}, err
 	}
@@ -109,6 +113,23 @@ func loadFile(path string, cfg *Config) error {
 	if err := dec.Decode(cfg); err != nil && !errors.Is(err, io.EOF) {
 		return fmt.Errorf("config file %s: %w", path, err)
 	}
+	return nil
+}
+
+// readSecretFiles loads secrets given as file paths (mounted Secrets).
+func readSecretFiles(cfg *Config) error {
+	r := &cfg.Radmon
+	if r.PasswordFile == "" {
+		return nil
+	}
+	if r.Password != "" {
+		return errors.New("radmon: set password or password_file, not both")
+	}
+	data, err := os.ReadFile(r.PasswordFile) //nolint:gosec // path comes from the operator
+	if err != nil {
+		return fmt.Errorf("radmon.password_file: %w", err)
+	}
+	r.Password = strings.TrimSpace(string(data))
 	return nil
 }
 
@@ -184,6 +205,7 @@ func applyEnv(lookup func(string) (string, bool), cfg *Config) error {
 	str("RADWATCH_RADMON_FORWARD_URL", &cfg.Radmon.ForwardURL)
 	str("RADWATCH_RADMON_USER", &cfg.Radmon.User)
 	str("RADWATCH_RADMON_PASSWORD", &cfg.Radmon.Password)
+	str("RADWATCH_RADMON_PASSWORD_FILE", &cfg.Radmon.PasswordFile)
 	str("RADWATCH_RADMON_DEVICE_ID", &cfg.Radmon.DeviceID)
 
 	return errors.Join(errs...)

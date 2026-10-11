@@ -163,6 +163,32 @@ func TestLoadErrors(t *testing.T) {
 	}
 }
 
+func TestRadmonPasswordFile(t *testing.T) {
+	path := writeFile(t, "s3cret\n")
+	base := map[string]string{
+		"RADWATCH_RADMON_FORWARD_URL":   "https://radmon.org/radmon.php",
+		"RADWATCH_RADMON_USER":          "station",
+		"RADWATCH_RADMON_PASSWORD_FILE": path,
+	}
+	cfg, err := Load(env(base))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.Radmon.Password != "s3cret" {
+		t.Errorf("password from file: got %q", cfg.Radmon.Password)
+	}
+
+	base["RADWATCH_RADMON_PASSWORD"] = "other"
+	if _, err := Load(env(base)); err == nil || !strings.Contains(err.Error(), "not both") {
+		t.Errorf("password and file: got %v", err)
+	}
+	delete(base, "RADWATCH_RADMON_PASSWORD")
+	base["RADWATCH_RADMON_PASSWORD_FILE"] = "/does/not/exist"
+	if _, err := Load(env(base)); err == nil || !strings.Contains(err.Error(), "password_file") {
+		t.Errorf("missing file: got %v", err)
+	}
+}
+
 func TestValidateReportsAllErrors(t *testing.T) {
 	cfg := Default()
 	cfg.LogLevel = "loud"

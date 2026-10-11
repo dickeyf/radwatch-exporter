@@ -34,7 +34,7 @@ Values map to the config with `config.*` (e.g. `config.gmcmap.allowedGIDs`), ren
 
 - 1 replica, `strategy: Recreate` (ADR-003, AD-06). Not configurable.
 - Container ports `http` (8080) and `metrics` (9090).
-- Config: `envFrom` the ConfigMap; secret values via `env.valueFrom.secretKeyRef` only if the Secret is enabled.
+- Config: `envFrom` the ConfigMap; the radmon.org password as a mounted Secret file, only when `config.radmon.passwordSecret.name` is set (IMPL-26).
 - Probes: `livenessProbe` and `readinessProbe` on `http:/healthz` and `http:/readyz`.
 - `podAnnotations` and `podLabels`: free-form maps passed through to the pod template.
 - Resources: small requests/limits (e.g. 10m CPU / 16Mi request, 64Mi limit) — tune after the first deploy (IMPL-29).
@@ -120,13 +120,14 @@ Holds non-secret configuration, consumed as env vars:
 | `RADWATCH_GMCMAP_FORWARD_URL` | `http://www.gmcmap.com/log2.asp` | Optional forwarding to a GMCmap server (PD-05, IMPL-34); empty = off |
 | `RADWATCH_RADMON_FORWARD_URL` | `https://radmon.org/radmon.php` | Optional forwarding to radmon.org (PD-05, IMPL-34); empty = off |
 | `RADWATCH_RADMON_USER` | `station` | radmon.org user |
+| `RADWATCH_RADMON_PASSWORD_FILE` | `/etc/radwatch/radmon/password` | Set by the chart when `passwordSecret.name` is set |
 | `RADWATCH_RADMON_DEVICE_ID` | `0034021` | Only this device is forwarded to radmon; empty = all |
 
 Keys are final (IMPL-04, ADR-006). The chart may also mount a YAML file and set `RADWATCH_CONFIG_FILE`; env vars override it.
 
 ### Secret (optional)
 
-The chart never creates a Secret (IMPL-26): secrets do not belong in values. The one secret value, the radmon.org password, comes from an existing Secret (`config.radmon.passwordSecret.name` / `key`, e.g. from External Secrets or sealed-secrets) as `RADWATCH_RADMON_PASSWORD` via `secretKeyRef`, never through the ConfigMap. Setting `config.radmon.forwardURL` without it fails the render.
+The chart never creates a Secret (IMPL-26): secrets do not belong in values. The one secret value, the radmon.org password, comes from an existing Secret (`config.radmon.passwordSecret.name` / `key`, e.g. from External Secrets or sealed-secrets), mounted read-only at `/etc/radwatch/radmon/password` and read through `RADWATCH_RADMON_PASSWORD_FILE`. A file rather than an env var, so it never shows in the pod spec's environment (kube-linter `read-secret-from-env-var`). Setting `config.radmon.forwardURL` without it fails the render.
 
 - The GMC-500+ is not known to support credentials (Q-02). AID/GID are sent in clear text and are not secrets.
 - A path-as-secret token (Q-04) would use the same pattern if ever needed.
