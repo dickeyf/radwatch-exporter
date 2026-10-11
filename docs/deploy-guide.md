@@ -30,6 +30,7 @@ An Ingress (with external-dns) is still useful for other clients that do resolve
 - Flux (source and Helm controllers).
 - A LoadBalancer implementation with a private address pool reachable from the counter's VLAN. Reference: Cilium LB-IPAM pools plus BGP advertisement of LoadBalancer IPs to pfSense.
 - Prometheus Operator CRDs, for the ServiceMonitor and the PrometheusRule; an Alertmanager route that delivers the alerts (the reference uses the default route, by mail).
+- Optional: a CNI that enforces NetworkPolicy (Cilium in the reference), for `networkPolicy`.
 - Optional: an Ingress controller and external-dns, only for name-based access by other clients.
 
 ## 2. Network

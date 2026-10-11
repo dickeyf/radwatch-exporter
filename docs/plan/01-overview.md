@@ -34,7 +34,7 @@ Everything else about the device's network behaviour (TLS, ports, auth, retries,
 - A `/metrics` endpoint scraped by the existing stack (Alloy or Prometheus Operator).
 - Health endpoints for Kubernetes probes.
 - A minimal, non-root, read-only container image.
-- A Helm chart: Deployment, ClusterIP Service, optional ingest LoadBalancer Service, optional Ingress, ConfigMap, optional ServiceMonitor, optional Grafana dashboard ConfigMap and alert rules (PrometheusRule).
+- A Helm chart: Deployment, ClusterIP Service, optional ingest LoadBalancer Service, optional Ingress, ConfigMap, optional ServiceMonitor, optional Grafana dashboard ConfigMap, alert rules (PrometheusRule) and NetworkPolicy.
 - Basic request filtering (allowlist) since the device likely has no real authentication.
 
 **Optional / later**
