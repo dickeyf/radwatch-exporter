@@ -37,7 +37,7 @@ Connection: close
 | Q-04 | Not tested yet |
 | Q-05 | No visible error on the device with the default `200 OK.ERR0` reply over a one-hour run. Behaviour on non-200 replies not tested (AD-13 keeps honest 4xx; only rejected uploads get them) |
 | Q-06 | Exactly `AID`, `GID`, `CPM`, `ACPM`, `uSV`, in that casing, no extra fields. `uSV` has two decimals (steps of 0.01 µSv/h). `ACPM` stayed at 14.89 across the first readings while `CPM` moved: keep watching |
-| Q-07 | Every 2 minutes, as configured on the device. Over one hour: 30 uploads, no gaps, intervals between 1:56 and 2:08 |
+| Q-07 | Configurable on the device. The one-hour run used 2 minutes (30 uploads, no gaps, intervals 1:56–2:08); the reference counter now uploads every minute |
 | Q-08 | **The device does not resolve hostnames**: with a name as Website it sends no DNS query at all, so Website must be an IP (found during the cluster deployment). `Host` is exactly the Website value. Only other headers: `Accept: */*`, `Connection: close`. No `User-Agent`. HTTP/1.1, one connection per upload |
 | Q-09 | DHCP, on a separate IoT VLAN; give it a reservation before using the source-IP allowlist |
 | Q-10 | No proxy or NAT: requests arrive from the counter's own address across VLANs, so a source-IP allowlist works |
