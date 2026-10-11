@@ -34,3 +34,6 @@ serviceMonitor:
 grafanaDashboard:
   enabled: true
   annotations: {grafana_folder: Radiation}
+prometheusRule:
+  enabled: true
+  labels: {release: prometheus}

@@ -89,7 +89,7 @@ spec:
   chart:
     spec:
       chart: radwatch-exporter
-      version: "0.3.x"
+      version: "0.4.x"
       sourceRef:
         kind: HelmRepository
         name: radwatch
@@ -116,6 +116,10 @@ spec:
         release: kube-prometheus-stack
     grafanaDashboard:
       enabled: true                        # ConfigMap for the Grafana sidecar (label grafana_dashboard: "1")
+    prometheusRule:
+      enabled: true                        # alerts: device silent, dose rate high, exporter down
+      labels:
+        release: kube-prometheus-stack     # the Prometheus CR's ruleSelector
 ```
 
 Optional, for name-based access by other clients through the Ingress controller (not used by the counter):

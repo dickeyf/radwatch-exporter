@@ -117,6 +117,10 @@ Counters only speak plain HTTP on port 80: if you route them through an Ingress,
 
 `grafanaDashboard.enabled: true` ships the dashboard as a ConfigMap for the Grafana sidecar (label `grafana_dashboard: "1"` by default). Or import [dashboards/radwatch.json](deploy/helm/radwatch-exporter/dashboards/radwatch.json) by hand. It shows the current dose rate, CPM, 24 h dose and time since the last upload, then log-scale dose-rate and CPM history with reference lines (background, 1 mSv/year, flights, occupational limit, and a perspective panel up to Chernobyl levels, see [reference dose rates](docs/reference-dose-rates.md)).
 
+### Alerts
+
+`prometheusRule.enabled: true` (with `prometheusRule.labels` set to whatever your Prometheus selects rules by) adds alerts for a silent device (no upload for 10 min), a high dose rate (warning above 1 µSv/h for 10 min, critical above 10 µSv/h for 5 min) and a down exporter. Thresholds are values; see the chart's `values.yaml`.
+
 ## Configuration
 
 Defaults, then an optional YAML file (`RADWATCH_CONFIG_FILE`), then env vars; a set env var always wins. Invalid config stops the process at startup.

@@ -1,0 +1,60 @@
+{{- if .Values.prometheusRule.enabled -}}
+{{- $r := .Values.prometheusRule -}}
+{{- $job := include "radwatch-exporter.fullname" . -}}
+# Alert rules (IMPL-32, PD-07). Requires the Prometheus Operator CRDs.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "radwatch-exporter.fullname" . }}
+  labels:
+    {{- include "radwatch-exporter.labels" . | nindent 4 }}
+    {{- with $r.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $r.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  groups:
+    - name: radwatch
+      rules:
+        - alert: RadwatchExporterDown
+          expr: up{job="{{ $job }}"} == 0
+          for: 5m
+          labels:
+            severity: warning
+            {{- with $r.alertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "radwatch-exporter is not being scraped"
+            description: "Prometheus cannot scrape {{ $job }} in namespace {{ .Release.Namespace }}; no readings are recorded."
+        - alert: RadwatchDeviceSilent
+          expr: time() - radwatch_last_report_timestamp_seconds > {{ $r.deviceSilent.seconds }}
+          for: {{ $r.deviceSilent.for }}
+          labels:
+            severity: {{ $r.deviceSilent.severity }}
+            {{- with $r.alertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "Radiation counter {{`{{ $labels.device }}`}} stopped uploading"
+            description: "No reading from {{`{{ $labels.device }}`}} ({{`{{ $labels.protocol }}`}}) for {{`{{ $value | humanizeDuration }}`}}. Check its power, WiFi and server settings."
+        {{- range $level := list "warning" "critical" }}
+        {{- $t := index $r.doseRate $level }}
+        {{- if $t.enabled }}
+        - alert: RadwatchDoseRate{{ title $level }}
+          expr: radwatch_dose_rate_sieverts_per_hour > {{ $t.sievertsPerHour }}
+          for: {{ $t.for }}
+          labels:
+            severity: {{ $level }}
+            {{- with $r.alertLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          annotations:
+            summary: "Dose rate at {{`{{ $labels.device }}`}} is {{`{{ $value | humanize }}`}}Sv/h"
+            description: "{{`{{ $labels.device }}`}} has reported above {{ $t.sievertsPerHour }} Sv/h for {{ $t.for }} (now {{`{{ $value | humanize }}`}}Sv/h). Check for a nearby source; silence the alert during deliberate tests."
+        {{- end }}
+        {{- end }}
+{{- end }}

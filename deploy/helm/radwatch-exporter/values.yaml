@@ -100,6 +100,34 @@ serviceMonitor:
   relabelings: []
   metricRelabelings: []
 
+# Alert rules as a Prometheus Operator PrometheusRule (IMPL-32, PD-07).
+prometheusRule:
+  enabled: false
+  # Free-form; add whatever label your Prometheus selects rules by
+  # (kube-prometheus-stack: release: <its release name>).
+  labels: {}
+  annotations: {}
+  # Extra labels on every alert, for Alertmanager routing.
+  alertLabels:
+    service: radwatch
+  # Device has not uploaded for this long (then "for" more before firing).
+  deviceSilent:
+    seconds: 600
+    for: 2m
+    severity: warning
+  # Dose-rate thresholds in Sv/h (base units): 1e-6 = 1 µSv/h, about 10x a
+  # typical background. Deliberate tests with sources will fire these: silence
+  # them in Alertmanager.
+  doseRate:
+    warning:
+      enabled: true
+      sievertsPerHour: 1e-6
+      for: 10m
+    critical:
+      enabled: true
+      sievertsPerHour: 1e-5
+      for: 5m
+
 # Grafana dashboard as a ConfigMap for the Grafana sidecar (IMPL-31). The JSON
 # is dashboards/radwatch.json in the chart.
 grafanaDashboard:

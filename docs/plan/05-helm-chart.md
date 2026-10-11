@@ -17,6 +17,7 @@ deploy/helm/radwatch-exporter/
 │   ├── secret.yaml           # not yet (IMPL-26)
 │   ├── servicemonitor.yaml   # optional, serviceMonitor.enabled (AD-07)
 │   ├── dashboard-configmap.yaml # optional, grafanaDashboard.enabled (IMPL-31)
+│   ├── prometheusrule.yaml   # optional, prometheusRule.enabled (IMPL-32)
 │   └── NOTES.txt             # prints the Website / URL to enter on the counter
 ├── dashboards/radwatch.json  # the Grafana dashboard
 ├── ci/full-values.yaml       # every optional value turned on, for CI (placeholders only)
@@ -135,6 +136,19 @@ Rendered only if `serviceMonitor.enabled: true` (AD-07: the cluster has the Prom
 ### Metadata on every resource
 
 `commonLabels` is added to every rendered resource. Together with `podAnnotations`/`podLabels`, `service.annotations`/`service.labels` and `ingress.annotations`, no metadata change should ever need a chart fork. The schema types all of these as string-to-string maps.
+
+### Alert rules (optional, IMPL-32)
+
+`prometheusRule.enabled: true` renders a `PrometheusRule` (Prometheus Operator CRDs) with free-form `labels` (whatever your Prometheus selects rules by, e.g. `release: kube-prometheus-stack`) and these alerts, thresholds from PD-07:
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| `RadwatchExporterDown` | scrape target down for 5 min | warning |
+| `RadwatchDeviceSilent` | no upload for `deviceSilent.seconds` (600) plus `for` (2m) | warning |
+| `RadwatchDoseRateWarning` | dose rate > `doseRate.warning.sievertsPerHour` (1e-6 Sv/h = 1 µSv/h) for 10 min | warning |
+| `RadwatchDoseRateCritical` | dose rate > `doseRate.critical.sievertsPerHour` (1e-5 Sv/h = 10 µSv/h) for 5 min | critical |
+
+Every alert also carries `alertLabels` (default `service: radwatch`) for Alertmanager routing. Deliberate tests with a source will fire the dose-rate alerts: silence them in Alertmanager for the duration.
 
 ### Grafana dashboard (optional, IMPL-31)
 
