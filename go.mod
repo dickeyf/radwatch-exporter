@@ -4,7 +4,8 @@ go 1.27.2
 
 require (
 	github.com/prometheus/client_golang v1.25.0
-	go.yaml.in/yaml/v3 v3.0.6
+	go.yaml.in/yaml/v3 v3.0.5
+	go.yaml.in/yaml/v4 v4.0.0
 )
 
 require (
